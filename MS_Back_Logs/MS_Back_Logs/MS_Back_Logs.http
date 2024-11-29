@@ -1,0 +1,6 @@
+@MS_Back_Logs_HostAddress = http://localhost:5000
+
+GET {{MS_Back_Logs_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,6 @@
+@MS_Back_Auth_HostAddress = http://localhost:5161
+
+GET {{MS_Back_Auth_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

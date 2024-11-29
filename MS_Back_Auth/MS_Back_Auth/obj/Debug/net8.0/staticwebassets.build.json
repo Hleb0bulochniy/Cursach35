@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "YIZpauecvuVKgBsRN1rZdM4lABVK7iJPUEyDrhqW4JY=",
+  "Source": "MS_Back_Auth",
+  "BasePath": "_content/MS_Back_Auth",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

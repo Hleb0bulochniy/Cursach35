@@ -1,0 +1,6 @@
+@MS_Back_Maps_HostAddress = http://localhost:5261
+
+GET {{MS_Back_Maps_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
