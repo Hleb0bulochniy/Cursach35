@@ -1,16 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace MS_Back_Maps.Models
 {
+    [Index(nameof(UserId), nameof(MapId), IsUnique = true)]
     public class MapsInUser
     {
         [Key]
         [Column("id")]
         public int Id { get; set; }
-
-        //Выяснить, как происходит межсервисное взаимодействие
-        //public User User { get; set; } = null!;
 
         [Column("userID")]
         public int UserId { get; set; }
@@ -49,5 +48,11 @@ namespace MS_Back_Maps.Models
 
         [Column("averageTime")]
         public int AverageTime { get; set; }
+
+        [Column("lastGameData")]
+        public string LastGameData { get; set; }
+
+        [Column("lastGameTime")]
+        public int LastGameTime { get; set; }
     }
 }

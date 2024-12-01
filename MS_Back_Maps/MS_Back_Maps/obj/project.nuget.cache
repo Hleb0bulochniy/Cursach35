@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "X6phAni/ZuDs9KlqDbhy4k3oUaFApMbofrd5na2NQVQEV7RVNU8Wk987G5cLeNm9xRhBTuvtTQTvPq/NrbTLBA==",
+  "dgSpecHash": "5nAdW/Ytb6kHy+9Nrsp2P55rAv9sZkZDlLLe7RoZ7/2fw54hCf3SgbFfkF/T6liVe/sHt5Xii9mYIcbYUXqcww==",
   "success": true,
-  "projectFilePath": "C:\\Users\\sacho\\OneDrive\\Рабочий стол\\MS_Back_Maps\\MS_Back_Maps\\MS_Back_Maps.csproj",
+  "projectFilePath": "C:\\Users\\sacho\\OneDrive\\Рабочий стол\\Cursach35\\MS_Back_Maps\\MS_Back_Maps\\MS_Back_Maps.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\sacho\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\sacho\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

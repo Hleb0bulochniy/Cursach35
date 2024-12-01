@@ -17,20 +17,5 @@ namespace MS_Back_Auth.Models
 
         [Column("password")]
         public string Password { get; set; }
-
-        [Column("lastGameType")]
-        public int LastGameType { get; set; }
-
-        [Column("LastGameSize")]
-        public int LastGameSize { get; set; }
-
-        [Column("LastGameData")]
-        public string LastGameData { get; set; }
-
-        [Column("LastGameTime")]
-        public int LastGameTime { get; set; }
-
-        [Column("UpdateDate")]
-        public DateTime updateDate { get; set; }
     }
 }

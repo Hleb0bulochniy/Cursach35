@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "NVW3+DBDZBLzNg1bW3x3ZGoD9mqUtkaePFdbF/2qhZdmZS00hQvFr20mYVOT2EqUqR1OYt3ZloY8TUuVh+caYg==",
+  "dgSpecHash": "CCHh8hy7jKueyxwPLRvwm+/xdPwfi8EintmUeOTnuHFmFgiVJQE+dKyX4YnzUzawygDgel0R0sEAlAGD/xnqoA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\sacho\\OneDrive\\Рабочий стол\\MS_Back_Auth\\MS_Back_Auth\\MS_Back_Auth.csproj",
+  "projectFilePath": "C:\\Users\\sacho\\OneDrive\\Рабочий стол\\Cursach35\\MS_Back_Auth\\MS_Back_Auth\\MS_Back_Auth.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\sacho\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\sacho\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

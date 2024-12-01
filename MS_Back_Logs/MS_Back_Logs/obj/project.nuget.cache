@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "lHaSZb0dR8hj2EVdCpMPdnHoXuNj+RdVT3kou9lFkCGyYtwkFY8ZUSzO8g6ilatFnzzDePiJ2epTie+PMW3Vyw==",
+  "dgSpecHash": "Z2h/Vb6wuc9CShle0nh2bQ9XqzvMfu+BNTJf/9wm6Im57dHMCHLS24H5krRnGdKkbfexVToXsOmDL91T74cjOw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\sacho\\OneDrive\\Рабочий стол\\MS_Back_Logs\\MS_Back_Logs\\MS_Back_Logs.csproj",
+  "projectFilePath": "C:\\Users\\sacho\\OneDrive\\Рабочий стол\\Cursach35\\MS_Back_Logs\\MS_Back_Logs\\MS_Back_Logs.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\sacho\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\sacho\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
