@@ -1,6 +1,6 @@
 ﻿namespace MS_Back_Maps
 {
-    [System.Serializable]
+    /*[System.Serializable]
     public class MapData
     {
         public string mapName { get; set; }
@@ -84,5 +84,59 @@
     public enum MapType
     {
         Classic, Cross, Bomb, None
+    }*/
+
+    [Serializable]
+    public enum CustomMapType
+    {
+        Auto, Manual, Mixed, None
+    }
+
+    [Serializable]
+    public class CustomMapData
+    {
+        public int mapID { get; set; }
+        public string mapName { get; set; }
+        public int bombCount { get; set; }
+        public int mapSize { get; set; }
+        public CustomMapType mapType { get; set; }
+
+
+        public int creatorId { get; set; }
+        public string creatorName { get; set; }
+        public DateTime creationDate { get; set; }
+        public int ratingSum { get; set; }
+        public int ratingCount { get; set; }
+        public int downloads {  get; set; }
+        public string about { get; set; }
+
+        public CustomMapData() { }
+
+        public CustomMapData(int mapID, string mapName, int bombCount, int mapSize, CustomMapType mapType, int creatorId, DateTime creationDate, int ratingSum, int ratingCount, int downloads, string about)
+        {
+            this.mapID = mapID;
+            this.mapName = mapName;
+            this.bombCount = bombCount;
+            this.mapSize = mapSize;
+            this.mapType = mapType;
+            this.creatorId = creatorId;
+            this.creationDate = creationDate;
+            this.ratingSum = ratingSum;
+            this.ratingCount = ratingCount;
+            this.downloads = downloads;
+            this.about = about;
+        }
+    }
+    [Serializable]
+    public class IdModel
+    {
+        public int id { get; set; }
+    }
+    [Serializable]
+    public class RateMap
+    {
+        public int mapId { get; set; }
+        //public int oldRate { get; set; }
+        public int newRate { get; set; }
     }
 }

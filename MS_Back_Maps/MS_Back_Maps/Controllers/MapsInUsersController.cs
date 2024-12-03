@@ -13,7 +13,7 @@ namespace MS_Back_Maps.Controllers
     [ApiController]
     public class MapsInUsersController : ControllerBase
     {
-        [Route("Input")]
+        /*[Route("Input")]
         [Authorize]
         [HttpPost]
         public IActionResult Input([FromBody] GameData data)
@@ -156,6 +156,6 @@ namespace MS_Back_Maps.Controllers
                 }
             }
             return Ok(gameData); //логирование
-        }
+        }*/
     }
 }

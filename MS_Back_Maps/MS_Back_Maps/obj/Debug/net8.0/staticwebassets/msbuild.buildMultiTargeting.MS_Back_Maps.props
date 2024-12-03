@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\MS_Back_Maps.props" />
+</Project>

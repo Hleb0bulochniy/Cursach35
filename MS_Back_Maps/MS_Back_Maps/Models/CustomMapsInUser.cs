@@ -60,5 +60,8 @@ namespace MS_Back_Maps.Models
 
         [Column("isFavourite")]
         public bool IsFavourite { get; set; }
+
+        [Column("rate")]
+        public int rate { get; set; }
     }
 }

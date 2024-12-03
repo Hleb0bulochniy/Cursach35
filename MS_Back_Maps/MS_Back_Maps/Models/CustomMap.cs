@@ -13,9 +13,9 @@ namespace MS_Back_Maps.Models
         [Column("bombCount")]
         public int BombCount { get; set; }
         [Column("mapSize")]
-        public int MapType { get; set; }
-        [Column("mapType")]
         public int MapSize { get; set; }
+        [Column("mapType")]
+        public int MapType { get; set; }
         [Column("creatorId")]
         public int CreatorId { get; set; }
         [Column("creationDate")]
