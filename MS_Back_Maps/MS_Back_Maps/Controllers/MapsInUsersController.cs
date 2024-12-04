@@ -7,155 +7,238 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Cryptography;
+using MS_Back_Maps.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MS_Back_Maps.Controllers
 {
     [ApiController]
     public class MapsInUsersController : ControllerBase
     {
-        /*[Route("Input")]
+        [Route("Progress")]
         [Authorize]
         [HttpPost]
-        public IActionResult Input([FromBody] GameData data)
+        public IActionResult ProgressPost([FromBody] MapSaveModel mapSaveModel)
         {
-            string? authorizationHeader = Request.Headers["Authorization"];
-            string token = authorizationHeader!.Replace("Bearer ", "");
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-            string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
-            if (data.userID != 0) userId = data.userID.ToString();
-
-            UserContext context = new UserContext();
-            User? user = context.Users.SingleOrDefault(u => u.Id == int.Parse(userId));
-            if (user == null) return BadRequest("Пользователь не обнаружен"); //логирование
-            user.Username = data.username;
-            user.Email = data.email;
-            if (data.password != "")
+            try
             {
-                string cryptedPassword = Cryptography.ConvertPassword(data.password);
-                user.Password = cryptedPassword;
-            }
-            user.LastGameType = (int)data.lastGameType;
-            user.LastGameSize = (int)data.lastGameSize;
-            user.LastGameData = data.lastGameData;
-            user.LastGameTime = data.lastGameTime;
-            user.updateDate = data.updateDate; //вместо всего этого можно добавить галочку мол это последняя игра
+                string? authorizationHeader = Request.Headers["Authorization"];
+                if (authorizationHeader == null) 
+                    return Unauthorized("Токен авторизации отсутствует");
+                string token = authorizationHeader!.Replace("Bearer ", "");
+                var handler = new JwtSecurityTokenHandler();
+                if (!handler.CanReadToken(token))
+                    return Unauthorized("Невалидный токен");
+                var jwtToken = handler.ReadJwtToken(token);
+                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                //Проверить, существует ли такой пользователь в Auth и залогировать
 
-            for (int i = 0; i < data.mapDataList.Count; i++)
-            {
-                MapsInUser? map2 = context.MapsInUsers.SingleOrDefault(u => (u.UserId == int.Parse(userId)) & (u.MapId == data.mapDataList[i].mapID));
-                if (map2 == null)
+
+                MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
+
+                MapsInUser? mapsInUser = context.MapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) & (map.UserId.ToString() == userId));
+
+                MapsInUser mapsInUserInput = new MapsInUser
                 {
-                    MapsInUser mapInUser = new MapsInUser();
-                    Map? map = context.Maps.SingleOrDefault(m => m.Id == data.mapDataList[i].mapID);
-                    if (map is Map)
-                    {
-                        mapInUser.MapId = map.Id;
-                        mapInUser.UserId = int.Parse(userId);
-                        context.MapsInUsers.Add(mapInUser);
-                        context.SaveChanges();
-                    }
-                    else return BadRequest("No map"); //логирование
+                    MapId = mapSaveModel.mapId,
+                    UserId = int.Parse(userId),
+                    GamesSum = mapSaveModel.gamesSum,
+                    Wins = mapSaveModel.wins,
+                    Loses = mapSaveModel.loses,
+                    OpenedTiles = mapSaveModel.openedTiles,
+                    OpenedNumberTiles = mapSaveModel.openedNumberTiles,
+                    OpenedBlankTiles = mapSaveModel.openedBlankTiles,
+                    FlagsSum = mapSaveModel.flagsSum,
+                    FlagsOnBombs = mapSaveModel.flagsOnBombs,
+                    TimeSpentSum = mapSaveModel.timeSpentSum,
+                    AverageTime = mapSaveModel.wins / mapSaveModel.timeSpentSum,
+                    LastGameData = mapSaveModel.lastGameData,
+                    LastGameTime = mapSaveModel.lastGameTime
+                };
+
+                if (mapsInUser == null)
+                {
+                    context.MapsInUsers.Add(mapsInUserInput);
+                }
+                else
+                {
+                    mapsInUser = mapsInUserInput;
                 }
 
-                MapsInUser mapsInUser = context.MapsInUsers.SingleOrDefault(u => (u.UserId == int.Parse(userId)) & (u.MapId == data.mapDataList[i].mapID))!;
-                mapsInUser.GamesSum = data.mapDataList[i].gamesSum;
-                mapsInUser.Wins = data.mapDataList[i].wins;
-                mapsInUser.Loses = data.mapDataList[i].loses;
-                mapsInUser.OpenedTiles = data.mapDataList[i].openedTiles;
-                mapsInUser.OpenedNumberTiles = data.mapDataList[i].openedNumberTiles;
-                mapsInUser.OpenedBlankTiles = data.mapDataList[i].openedBlankTiles;
-                mapsInUser.FlagsSum = data.mapDataList[i].flagsSum;
-                mapsInUser.FlagsOnBombs = data.mapDataList[i].flagsOnBombs;
-                mapsInUser.TimeSpentSum = data.mapDataList[i].timeSpentSum;
-                mapsInUser.AverageTime = data.mapDataList[i].averageTime;
+                context.SaveChanges();
+                return Ok("Данные внесены"); //логирование
             }
-            context.SaveChanges();
-            return Ok("Данные загружены на сервер"); //логирование
+            catch
+            {
+                //залогировать ошибку
+                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+            }
         }
 
-        [Route("Output")] //наверное стоит разделить данные учетки и данные игры
+        [Route("Progress")]
+        [Authorize]
+        [HttpGet]
+        public IActionResult ProgressGet([FromBody] IdModel idmodel)
+        {
+            try
+            {
+                string? authorizationHeader = Request.Headers["Authorization"];
+                if (authorizationHeader == null)
+                    return Unauthorized("Токен авторизации отсутствует");
+                string token = authorizationHeader!.Replace("Bearer ", "");
+                var handler = new JwtSecurityTokenHandler();
+                if (!handler.CanReadToken(token))
+                    return Unauthorized("Невалидный токен");
+                var jwtToken = handler.ReadJwtToken(token);
+                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+
+                MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
+
+                MapsInUser? mapsInUser = context.MapsInUsers.FirstOrDefault(map => (map.Id == idmodel.id) & (map.UserId.ToString() == userId));
+
+                Map map = context.Maps.FirstOrDefault(map => (map.Id == idmodel.id));
+                if (map == null)
+                    return NotFound("Такой карты не существует");
+
+                if (mapsInUser == null)
+                {
+                    return NotFound("Соответствие пользователя и карты не найдено");
+                }
+
+                MapSaveModel mapSaveModel = new MapSaveModel
+                {
+                    id = mapsInUser.Id,
+                    mapId = mapsInUser.MapId,
+                    mapName = map.MapName,
+                    gamesSum = mapsInUser.GamesSum,
+                    wins = mapsInUser.Wins,
+                    loses = mapsInUser.Loses,
+                    openedTiles = mapsInUser.OpenedTiles,
+                    openedNumberTiles = mapsInUser.OpenedNumberTiles,
+                    openedBlankTiles = mapsInUser.OpenedBlankTiles,
+                    flagsSum = mapsInUser.FlagsSum,
+                    flagsOnBombs = mapsInUser.FlagsOnBombs,
+                    averageTime = mapsInUser.AverageTime,
+                    lastGameData = mapsInUser.LastGameData,
+                    lastGameTime = mapsInUser.LastGameTime,
+                };
+
+
+
+                return Ok(mapSaveModel); //логирование
+            }
+            catch
+            {
+                //залогировать ошибку
+                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+            }
+        }
+
+        [Route("SaveList")]
         [Authorize]
         [HttpPost]
-        public IActionResult BDtoJSON()
+        public IActionResult SaveListPost([FromBody] MapSaveListModel mapSaveListModel)
         {
-            #region user getting
-            GameData gameData = new GameData();
-            string? authorizationHeader = Request.Headers["Authorization"];
-            string token = authorizationHeader!.Replace("Bearer ", "");
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-            string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
-            UserContext context = new UserContext();
-            User? user = context.Users.SingleOrDefault(u => u.Id == int.Parse(userId));
-            if (user == null) return BadRequest("Пользователь не обнаружен"); //логирование
-
-            gameData.username = user.Username;
-            gameData.password = "";
-            gameData.email = user.Email;
-            gameData.updateDate = user.updateDate;
-            gameData.userID = int.Parse(userId); //нужно будет обращаться к Auth
-
-
-            var claims = new List<Claim>
+            try
             {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, user.Username),
-            };
+                string? authorizationHeader = Request.Headers["Authorization"];
+                if (authorizationHeader == null)
+                    return Unauthorized("Токен авторизации отсутствует");
+                string token = authorizationHeader!.Replace("Bearer ", "");
+                var handler = new JwtSecurityTokenHandler();
+                if (!handler.CanReadToken(token))
+                    return Unauthorized("Невалидный токен");
+                var jwtToken = handler.ReadJwtToken(token);
+                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                //Проверить, существует ли такой пользователь в Auth и залогировать
 
-            var jwt = new JwtSecurityToken(
-            issuer: AuthOptions.ISSUER,
-            audience: AuthOptions.AUDIENCE,
-            claims: claims,
-            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(24)),
-            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            var jwtr = new JwtSecurityToken(
-            issuer: AuthOptions.ISSUER,
-            audience: AuthOptions.AUDIENCE,
-            claims: claims,
-            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(300)),
-            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            var encodedJwtr = new JwtSecurityTokenHandler().WriteToken(jwt);
+                MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
 
-            gameData.aToken = encodedJwt;
-            gameData.rToken = encodedJwtr;
-            #endregion
-
-            gameData.lastGameType = (MapType)user.LastGameType;
-            gameData.lastGameSize = (MapSize)user.LastGameSize;
-            gameData.lastGameData = user.LastGameData;
-            gameData.lastGameTime = user.LastGameTime;
-
-            var maps = context.MapsInUsers.Where(u => (u.UserId == int.Parse(userId))).ToList();
-            for (int i = 1; i < maps.Count + 1; i++)
-            {
-                MapsInUser? mapInUser = maps.SingleOrDefault(u => u.MapId == i);
-                Map? map = context.Maps.SingleOrDefault(u => u.Id == i);
-                if (mapInUser != null && map != null)
+                if (mapSaveListModel.mapSaveList.IsNullOrEmpty())
                 {
-                    MapData mapData = new MapData();
-                    mapData.mapID = i;
-                    mapData.mapName = map.MapName;
-                    mapData.bombCount = map.BombCount;
-                    mapData.mapType = (MapType)map.MapType;
-                    mapData.mapSize = (MapSize)map.MapSize;
-
-                    mapData.gamesSum = mapInUser.GamesSum;
-                    mapData.wins = mapInUser.Wins;
-                    mapData.loses = mapInUser.Loses;
-                    mapData.openedTiles = mapInUser.OpenedTiles;
-                    mapData.openedNumberTiles = mapInUser.OpenedNumberTiles;
-                    mapData.openedBlankTiles = mapInUser.OpenedBlankTiles;
-                    mapData.flagsSum = mapInUser.FlagsSum;
-                    mapData.flagsOnBombs = mapInUser.FlagsOnBombs;
-                    mapData.timeSpentSum = mapInUser.TimeSpentSum;
-                    mapData.averageTime = mapInUser.AverageTime;
-                    gameData.mapDataList.Add(mapData);
+                    return BadRequest("прислан пустой список");
                 }
+
+                foreach ( MapSaveModel mapSaveModel in mapSaveListModel.mapSaveList )
+                {
+                    MapsInUser? mapsInUser = context.MapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) & (map.UserId.ToString() == userId));
+
+                    MapsInUser mapsInUserInput = new MapsInUser
+                    {
+                        MapId = mapSaveModel.mapId,
+                        UserId = int.Parse(userId),
+                        GamesSum = mapSaveModel.gamesSum,
+                        Wins = mapSaveModel.wins,
+                        Loses = mapSaveModel.loses,
+                        OpenedTiles = mapSaveModel.openedTiles,
+                        OpenedNumberTiles = mapSaveModel.openedNumberTiles,
+                        OpenedBlankTiles = mapSaveModel.openedBlankTiles,
+                        FlagsSum = mapSaveModel.flagsSum,
+                        FlagsOnBombs = mapSaveModel.flagsOnBombs,
+                        TimeSpentSum = mapSaveModel.timeSpentSum,
+                        AverageTime = mapSaveModel.wins / mapSaveModel.timeSpentSum,
+                        LastGameData = mapSaveModel.lastGameData,
+                        LastGameTime = mapSaveModel.lastGameTime
+                    };
+
+                    if (mapsInUser == null)
+                    {
+                        context.MapsInUsers.Add(mapsInUserInput);
+                    }
+                    else
+                    {
+                        mapsInUser = mapsInUserInput;
+                    }
+                }
+
+                context.SaveChanges();
+                return Ok("Данные внесены"); //логирование
             }
-            return Ok(gameData); //логирование
-        }*/
+            catch
+            {
+                //залогировать ошибку
+                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+            }
+        }
+
+        [Route("SaveList")]
+        [Authorize]
+        [HttpGet]
+        public IActionResult SaveListGet()
+        {
+            try
+            {
+                string? authorizationHeader = Request.Headers["Authorization"];
+                if (authorizationHeader == null)
+                    return Unauthorized("Токен авторизации отсутствует");
+                string token = authorizationHeader!.Replace("Bearer ", "");
+                var handler = new JwtSecurityTokenHandler();
+                if (!handler.CanReadToken(token))
+                    return Unauthorized("Невалидный токен");
+                var jwtToken = handler.ReadJwtToken(token);
+                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+
+                MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
+
+                List<MapsInUser> maps = context.MapsInUsers
+                                   .Where(map => map.UserId.ToString() == userId)
+                                   .ToList();
+                if (maps.IsNullOrEmpty())
+                    return BadRequest("нет сохранений");
+
+                context.SaveChanges();
+                return Ok("Данные внесены"); //логирование
+            }
+            catch
+            {
+                //залогировать ошибку
+                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+            }
+        }
     }
 }

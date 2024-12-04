@@ -139,4 +139,27 @@
         //public int oldRate { get; set; }
         public int newRate { get; set; }
     }
+    [Serializable]
+    public class MapSaveModel
+    {
+        public int id { get; set; }
+        public int mapId { get; set; }
+        public string mapName { get; set; }
+        public int gamesSum { get; set; }
+        public int wins {  get; set; }
+        public int loses { get; set; }
+        public int openedTiles { get; set; }
+        public int openedNumberTiles { get; set; }
+        public int openedBlankTiles { get; set; }
+        public int flagsSum { get; set; }
+        public int flagsOnBombs {  get; set; }
+        public int timeSpentSum { get; set; }
+        public int averageTime {  get; set; }
+        public string lastGameData { get; set; }
+        public int lastGameTime { get; set; }
+    }
+    public class MapSaveListModel
+    {
+        public List<MapSaveModel> mapSaveList { get; set; } = new List<MapSaveModel>();
+    }
 }
