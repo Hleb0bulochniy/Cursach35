@@ -57,8 +57,6 @@ namespace MS_Back_Auth.Controllers
                         Username = model.userName,
                         Email = model.email,
                         Password = cryptedPassword,
-                        LastGameData = "",
-                        updateDate = DateTime.Now,
                     };
                     context.Users.Add(user);
                     context.SaveChanges();

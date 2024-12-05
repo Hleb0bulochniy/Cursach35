@@ -11,6 +11,11 @@ namespace MS_Back_Maps.Controllers
     [ApiController]
     public class CustomMapsInUsersController : ControllerBase
     {
+        private readonly HelpFuncs _helpfuncs;
+        public CustomMapsInUsersController(HelpFuncs helpfuncs)
+        {
+            _helpfuncs = helpfuncs;
+        }
         [Route("Progress")]
         [Authorize]
         [HttpPost]
@@ -18,21 +23,17 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null)
-                    return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
                 MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) & (map.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) && (map.UserId.ToString() == userId));
 
                 CustomMapsInUser CustomMapsInUserInput = new CustomMapsInUser
                 {
@@ -47,7 +48,7 @@ namespace MS_Back_Maps.Controllers
                     FlagsSum = mapSaveModel.flagsSum,
                     FlagsOnBombs = mapSaveModel.flagsOnBombs,
                     TimeSpentSum = mapSaveModel.timeSpentSum,
-                    AverageTime = mapSaveModel.wins / mapSaveModel.timeSpentSum,
+                    AverageTime = mapSaveModel.timeSpentSum > 0 ? mapSaveModel.wins / mapSaveModel.timeSpentSum : 0,
                     LastGameData = mapSaveModel.lastGameData,
                     LastGameTime = mapSaveModel.lastGameTime
                 };
@@ -61,7 +62,19 @@ namespace MS_Back_Maps.Controllers
                 }
                 else
                 {
-                    customMapsInUser = CustomMapsInUserInput;
+                    customMapsInUser.CustomMapId = mapSaveModel.mapId;
+                    customMapsInUser.GamesSum = mapSaveModel.gamesSum;
+                    customMapsInUser.Wins = mapSaveModel.wins;
+                    customMapsInUser.Loses = mapSaveModel.loses;
+                    customMapsInUser.OpenedTiles = mapSaveModel.openedTiles;
+                    customMapsInUser.OpenedNumberTiles = mapSaveModel.openedNumberTiles;
+                    customMapsInUser.OpenedBlankTiles = mapSaveModel.openedBlankTiles;
+                    customMapsInUser.FlagsSum = mapSaveModel.flagsSum;
+                    customMapsInUser.FlagsOnBombs = mapSaveModel.flagsOnBombs;
+                    customMapsInUser.TimeSpentSum = mapSaveModel.timeSpentSum;
+                    customMapsInUser.AverageTime = mapSaveModel.timeSpentSum > 0 ? mapSaveModel.wins / mapSaveModel.timeSpentSum : 0;
+                    customMapsInUser.LastGameData = mapSaveModel.lastGameData;
+                    customMapsInUser.LastGameTime = mapSaveModel.lastGameTime;
                 }
 
                 context.SaveChanges();
@@ -81,21 +94,17 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null)
-                    return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
                 MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(map => (map.Id == idmodel.id) & (map.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(map => (map.Id == idmodel.id) && (map.UserId.ToString() == userId));
 
                 CustomMap customMap = context.CustomMaps.FirstOrDefault(cmap => (cmap.Id == idmodel.id));
                 if (customMap == null)
@@ -140,28 +149,24 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null)
-                    return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
                 MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
 
-                if (mapSaveListModel.mapSaveList.IsNullOrEmpty())
+                if (mapSaveListModel.mapSaveList?.Count() == 0)
                 {
                     return BadRequest("прислан пустой список");
                 }
 
                 foreach (MapSaveModel mapSaveModel in mapSaveListModel.mapSaveList)
                 {
-                    CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) & (map.UserId.ToString() == userId));
+                    CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) && (map.UserId.ToString() == userId));
 
                     CustomMapsInUser customMapsInUserInput = new CustomMapsInUser
                     {
@@ -176,7 +181,7 @@ namespace MS_Back_Maps.Controllers
                         FlagsSum = mapSaveModel.flagsSum,
                         FlagsOnBombs = mapSaveModel.flagsOnBombs,
                         TimeSpentSum = mapSaveModel.timeSpentSum,
-                        AverageTime = mapSaveModel.wins / mapSaveModel.timeSpentSum,
+                        AverageTime = mapSaveModel.timeSpentSum > 0 ? mapSaveModel.wins / mapSaveModel.timeSpentSum : 0,
                         LastGameData = mapSaveModel.lastGameData,
                         LastGameTime = mapSaveModel.lastGameTime
                     };
@@ -190,7 +195,19 @@ namespace MS_Back_Maps.Controllers
                     }
                     else
                     {
-                        customMapsInUser = customMapsInUserInput;
+                        customMapsInUser.CustomMapId = mapSaveModel.mapId;
+                        customMapsInUser.GamesSum = mapSaveModel.gamesSum;
+                        customMapsInUser.Wins = mapSaveModel.wins;
+                        customMapsInUser.Loses = mapSaveModel.loses;
+                        customMapsInUser.OpenedTiles = mapSaveModel.openedTiles;
+                        customMapsInUser.OpenedNumberTiles = mapSaveModel.openedNumberTiles;
+                        customMapsInUser.OpenedBlankTiles = mapSaveModel.openedBlankTiles;
+                        customMapsInUser.FlagsSum = mapSaveModel.flagsSum;
+                        customMapsInUser.FlagsOnBombs = mapSaveModel.flagsOnBombs;
+                        customMapsInUser.TimeSpentSum = mapSaveModel.timeSpentSum;
+                        customMapsInUser.AverageTime = mapSaveModel.timeSpentSum > 0 ? mapSaveModel.wins / mapSaveModel.timeSpentSum : 0;
+                        customMapsInUser.LastGameData = mapSaveModel.lastGameData;
+                        customMapsInUser.LastGameTime = mapSaveModel.lastGameTime;
                     }
                 }
 
@@ -211,15 +228,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null)
-                    return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
@@ -228,7 +241,7 @@ namespace MS_Back_Maps.Controllers
                 List<CustomMapsInUser> maps = context.CustomMapsInUsers
                                    .Where(map => map.UserId.ToString() == userId)
                                    .ToList();
-                if (maps.IsNullOrEmpty())
+                if (maps.Count() == 0)
                     return BadRequest("нет сохранений");
 
                 context.SaveChanges();
@@ -248,14 +261,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
@@ -264,7 +274,7 @@ namespace MS_Back_Maps.Controllers
                 if (customMap == null)
                     return NotFound("Карта с указанным ID не найдена");
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == rateMap.mapId) & (cmap.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == rateMap.mapId) && (cmap.UserId.ToString() == userId));
 
                 if (customMapsInUser == null)
                     return NotFound("Нет соответствия пользователя и кстомной карты");
@@ -292,14 +302,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
@@ -308,7 +315,7 @@ namespace MS_Back_Maps.Controllers
                 if (customMap == null)
                     return NotFound("Карта с указанным ID не найдена");
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == rateMap.mapId) & (cmap.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == rateMap.mapId) && (cmap.UserId.ToString() == userId));
 
                 if (customMapsInUser == null)
                     return NotFound("Нет соответствия пользователя и кстомной карты");
@@ -336,14 +343,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
@@ -352,7 +356,7 @@ namespace MS_Back_Maps.Controllers
                 if (customMap == null)
                     return NotFound("Карта с указанным ID не найдена");
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) & (cmap.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId.ToString() == userId));
 
                 if (customMapsInUser == null)
                     return NotFound("Нет соответствия пользователя и кстомной карты");
@@ -379,14 +383,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
@@ -395,7 +396,7 @@ namespace MS_Back_Maps.Controllers
                 if (customMap == null)
                     return NotFound("Карта с указанным ID не найдена");
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) & (cmap.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId.ToString() == userId));
                 if (customMapsInUser != null)
                 {
                     customMapsInUser.IsAdded = true;
@@ -443,14 +444,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
@@ -459,7 +457,7 @@ namespace MS_Back_Maps.Controllers
                 if (customMap == null)
                     return NotFound("Карта с указанным ID не найдена");
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) & (cmap.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId.ToString() == userId));
                 if (customMapsInUser == null)
                 {
                     return BadRequest("Соответствия пользователя и кастомной карты не существует");
@@ -488,14 +486,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
@@ -504,7 +499,7 @@ namespace MS_Back_Maps.Controllers
                 if (customMap == null)
                     return NotFound("Карта с указанным ID не найдена");
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) & (cmap.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId.ToString() == userId));
                 if (customMapsInUser == null)
                 {
                     return BadRequest("Соответствия пользователя и кастомной карты не существует");
@@ -530,14 +525,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
 
@@ -546,7 +538,7 @@ namespace MS_Back_Maps.Controllers
                 if (customMap == null)
                     return NotFound("Карта с указанным ID не найдена");
 
-                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) & (cmap.UserId.ToString() == userId));
+                CustomMapsInUser? customMapsInUser = context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId.ToString() == userId));
                 if (customMapsInUser == null)
                 {
                     return BadRequest("Соответствия пользователя и кастомной карты не существует");

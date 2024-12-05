@@ -11,6 +11,11 @@ namespace MS_Back_Maps.Controllers
     [ApiController]
     public class CustomMapsController : ControllerBase
     {
+        private readonly HelpFuncs _helpfuncs;
+        public CustomMapsController(HelpFuncs helpfuncs)
+        {
+            _helpfuncs = helpfuncs;
+        }
         [Route("CustomMap")]
         [Authorize]
         [HttpPost]
@@ -18,15 +23,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) 
-                    return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
                 MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
@@ -97,14 +98,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
                 MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
@@ -128,14 +126,11 @@ namespace MS_Back_Maps.Controllers
         {
             try
             {
-                string? authorizationHeader = Request.Headers["Authorization"];
-                if (authorizationHeader == null) return Unauthorized("Токен авторизации отсутствует");
-                string token = authorizationHeader!.Replace("Bearer ", "");
-                var handler = new JwtSecurityTokenHandler();
-                if (!handler.CanReadToken(token))
-                    return Unauthorized("Невалидный токен");
-                var jwtToken = handler.ReadJwtToken(token);
-                string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (userId == null)
+                {
+                    return Unauthorized("Невалидный или отсутствующий токен");
+                }
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
                 MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
