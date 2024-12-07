@@ -19,7 +19,7 @@ namespace MS_Back_Maps
             builder.Services.AddAuthorization();
 
             builder.Services.AddScoped<HelpFuncs>();
-
+            builder.Services.AddSingleton<ProducerService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {

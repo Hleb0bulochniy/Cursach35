@@ -17,7 +17,7 @@ namespace MS_Back_Logs
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddAuthorization();
-
+            builder.Services.AddHostedService<ConsumerService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {

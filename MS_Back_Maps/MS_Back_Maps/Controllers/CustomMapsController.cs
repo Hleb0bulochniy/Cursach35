@@ -5,6 +5,8 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MS_Back_Maps.Data;
+using Azure.Core;
+using System.Text.Json;
 
 namespace MS_Back_Maps.Controllers
 {
@@ -12,18 +14,20 @@ namespace MS_Back_Maps.Controllers
     public class CustomMapsController : ControllerBase
     {
         private readonly HelpFuncs _helpfuncs;
-        public CustomMapsController(HelpFuncs helpfuncs)
+        private readonly ProducerService _producerService;
+        public CustomMapsController(HelpFuncs helpfuncs, ProducerService producerService)
         {
             _helpfuncs = helpfuncs;
+            _producerService = producerService;
         }
         [Route("CustomMap")]
-        [Authorize]
+        //[Authorize]
         [HttpPost]
-        public IActionResult CustomMapPost([FromBody] CustomMapData customMapData)
+        public async Task<IActionResult> CustomMapPost([FromBody] CustomMapData customMapData)
         {
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                /*string? userId = _helpfuncs.GetUserIdFromToken(Request);
                 if (userId == null)
                 {
                     return Unauthorized("Невалидный или отсутствующий токен");
@@ -46,7 +50,20 @@ namespace MS_Back_Maps.Controllers
                 };
                 //проверить, существует ли уже карта
                 context.CustomMaps.Add(customMap);
-                context.SaveChanges();
+                context.SaveChanges();*/
+                LogModel logModel = new LogModel
+                {
+                    userId = 123,
+                    dateTime = DateTime.Now,
+                    serviceName = "CustomMapsController",
+                    logLevel = "",
+                    eventType = "",
+                    message = "Ok",
+                    details = "",
+                    errorCode = ""
+                };
+                var message = JsonSerializer.Serialize(logModel);
+                await _producerService.ProduceAsync("LogUpdates", message);
                 return Ok("Данные загружены на сервер"); //логирование
             }
             catch

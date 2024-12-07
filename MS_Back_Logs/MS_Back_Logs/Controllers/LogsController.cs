@@ -17,6 +17,7 @@ namespace MS_Back_Logs.Controllers
         [HttpPost]
         public IActionResult LogPost([FromBody] LogModel logModel)
         {
+
             try
             {
                 string? authorizationHeader = Request.Headers["Authorization"];

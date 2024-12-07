@@ -16,10 +16,10 @@ namespace MS_Back_Maps.Controllers
         {
             _helpfuncs = helpfuncs;
         }
-        [Route("Progress")]
+        [Route("ProgressCustom")]
         [Authorize]
         [HttpPost]
-        public IActionResult ProgressPost([FromBody] MapSaveModel mapSaveModel)
+        public IActionResult ProgressCustomPost([FromBody] MapSaveModel mapSaveModel)
         {
             try
             {
@@ -87,10 +87,10 @@ namespace MS_Back_Maps.Controllers
             }
         }
 
-        [Route("Progress")]
+        [Route("ProgressCustom")]
         [Authorize]
         [HttpGet]
-        public IActionResult ProgressGet([FromBody] IdModel idmodel)
+        public IActionResult ProgressCustomGet([FromBody] IdModel idmodel)
         {
             try
             {
@@ -142,10 +142,10 @@ namespace MS_Back_Maps.Controllers
             }
         }
 
-        [Route("SaveList")]
+        [Route("SaveListCustom")]
         [Authorize]
         [HttpPost]
-        public IActionResult SaveListPost([FromBody] MapSaveListModel mapSaveListModel)
+        public IActionResult SaveListCustomPost([FromBody] MapSaveListModel mapSaveListModel)
         {
             try
             {
@@ -221,10 +221,10 @@ namespace MS_Back_Maps.Controllers
             }
         }
 
-        [Route("SaveList")]
+        [Route("SaveListCustom")]
         [Authorize]
         [HttpGet]
-        public IActionResult SaveListGet()
+        public IActionResult SaveMapsListCustomGet()
         {
             try
             {
