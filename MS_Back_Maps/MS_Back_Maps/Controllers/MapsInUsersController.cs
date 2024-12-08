@@ -30,36 +30,11 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> ProgressPost([FromBody] MapSaveModel mapSaveModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "MapsInUsersController",
-                logLevel = "Info",
-                eventType = "ProgressPost",
-                message = "Progress was pasted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("ProgressPost", "Progress was pasted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
                 if (mapSaveModel == null)
@@ -78,7 +53,7 @@ namespace MS_Back_Maps.Controllers
                     MapsInUser mapsInUserInput = new MapsInUser
                     {
                         MapId = mapSaveModel.mapId,
-                        UserId = int.Parse(userId),
+                        UserId = parsedUserId,
                         GamesSum = mapSaveModel.gamesSum,
                         Wins = mapSaveModel.wins,
                         Loses = mapSaveModel.loses,
@@ -117,12 +92,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -131,59 +102,21 @@ namespace MS_Back_Maps.Controllers
         [HttpGet]
         public async Task<IActionResult> ProgressGet(int idModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "MapsInUsersController",
-                logLevel = "Info",
-                eventType = "ProgressGet",
-                message = "Progress was gotten",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("ProgressGet", "Progress was gotten");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
-
-                Map map = _context.Maps.FirstOrDefault(map => (map.Id == idModel));
-                if (map == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                Map? map = _context.Maps.FirstOrDefault(map => ((map.Id == idModel)));
+                var (success2, result2) = await MapNullCheck(map, logModel);
+                if (!success2) return result2!;
 
                 MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.Id == idModel) && (map.UserId == parsedUserId));
-                if (mapsInUser == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The map:user doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
+                if (!success3) return result3!;
 
                 MapSaveModel mapSaveModel = new MapSaveModel
                 {
@@ -208,12 +141,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -222,36 +151,11 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveListPost([FromBody] MapSaveListModel mapSaveListModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "MapsInUsersController",
-                logLevel = "Info",
-                eventType = "SaveListPost",
-                message = "Save list was posted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("SaveListPost", "Save list was posted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
@@ -266,7 +170,7 @@ namespace MS_Back_Maps.Controllers
 
                 foreach ( MapSaveModel mapSaveModel in mapSaveListModel.mapSaveList ) //извлекать данные в списке с помощью linq
                 {
-                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) && (map.UserId.ToString() == userId));
+                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) && (map.UserId == parsedUserId));
 
                     if (mapsInUser == null) //переделать логику логирования, чтоб для каждой карты был свой лог
                     {
@@ -274,7 +178,7 @@ namespace MS_Back_Maps.Controllers
                         MapsInUser mapsInUserInput = new MapsInUser
                         {
                             MapId = mapSaveModel.mapId,
-                            UserId = int.Parse(userId),
+                            UserId = logModel.userId = parsedUserId,
                             GamesSum = mapSaveModel.gamesSum,
                             Wins = mapSaveModel.wins,
                             Loses = mapSaveModel.loses,
@@ -314,12 +218,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -328,36 +228,11 @@ namespace MS_Back_Maps.Controllers
         [HttpGet]
         public async Task<IActionResult> SaveListGet()
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "MapsInUsersController",
-                logLevel = "Info",
-                eventType = "SaveListGet",
-                message = "Save list gotten",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("SaveListGet", "Save list gotten");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
@@ -378,12 +253,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -392,6 +263,81 @@ namespace MS_Back_Maps.Controllers
         {
             var message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
+        }
+
+        private LogModel LogModelCreate(string eventType, string message)
+        {
+            return new LogModel
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "MapsInUsersController",
+                logLevel = "Info",
+                eventType = eventType,
+                message = message,
+                details = "",
+                errorCode = "200"
+            };
+        }
+
+        private async Task<(bool Success, IActionResult? Result, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
+        {
+            string? userId = _helpfuncs.GetUserIdFromToken(request);
+            if (string.IsNullOrEmpty(userId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "Invalid or missing token";
+                logModel.errorCode = "401";
+                await LogEventAsync(logModel);
+                return (false, Unauthorized(logModel.message), -1);
+            }
+
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User ID conversion in int failed";
+                logModel.errorCode = "500";
+                await LogEventAsync(logModel);
+                return (false, BadRequest(logModel.message), -1);
+            }
+
+            return (true, null, parsedUserId);
+        }
+
+        private async Task<(bool Success, IActionResult? Result)> MapNullCheck(Map? map, LogModel logModel)
+        {
+            if (map == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "The map doesn't exists";
+                logModel.errorCode = "404";
+                await LogEventAsync(logModel);
+                return (false, NotFound(logModel.message));
+            }
+            return (true, null);
+        }
+
+        private async Task<(bool Success, IActionResult? Result)> MapsInUserNullCheck(MapsInUser? mapsInUser, LogModel logModel)
+        {
+            if (mapsInUser == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "The map:user doesn't exists";
+                logModel.errorCode = "404";
+                await LogEventAsync(logModel);
+                return (false, NotFound(logModel.message));
+            }
+            return (true, null);
+        }
+
+        private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
+        {
+            logModel.eventType = "Error";
+            logModel.message = "Server error";
+            logModel.details = ex.Message;
+            logModel.errorCode = "500";
+            await LogEventAsync(logModel);
+            return logModel;
         }
     }
 }

@@ -26,36 +26,11 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> ProgressCustomPost([FromBody] MapSaveModel mapSaveModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "ProgressCustomPost",
-                message = "Progress was pasted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("ProgressCustomPost", "Progress was pasted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
                 if (mapSaveModel == null)
@@ -74,7 +49,7 @@ namespace MS_Back_Maps.Controllers
                     CustomMapsInUser customMapsInUserInput = new CustomMapsInUser
                     {
                         CustomMapId = mapSaveModel.mapId,
-                        UserId = int.Parse(userId),
+                        UserId = parsedUserId,
                         GamesSum = mapSaveModel.gamesSum,
                         Wins = mapSaveModel.wins,
                         Loses = mapSaveModel.loses,
@@ -113,12 +88,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -127,58 +98,21 @@ namespace MS_Back_Maps.Controllers
         [HttpGet]
         public async Task<IActionResult> ProgressCustomGet(int idModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "ProgressCustomGet",
-                message = "Progress was gotten",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("ProgressCustomGet", "Progress was gotten");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
-                CustomMap customMap = _context.CustomMaps.FirstOrDefault(cmap => (cmap.Id == idModel));
-                if (customMap == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The custom map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idModel)));
+                var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
+                if (!success2) return result2!;
 
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.UserId == parsedUserId));
-                if (customMapsInUser == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The customMap:user doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
+                if (!success3) return result3!;
 
                 MapSaveModel mapSaveModel = new MapSaveModel
                 {
@@ -203,12 +137,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -217,36 +147,11 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveListCustomPost([FromBody] MapSaveListModel mapSaveListModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "SaveListCustomPost",
-                message = "Custom save list posted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("SaveListCustomPost", "Custom save list posted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
@@ -269,7 +174,7 @@ namespace MS_Back_Maps.Controllers
                         MapsInUser mapsInUserInput = new MapsInUser
                         {
                             MapId = mapSaveModel.mapId,
-                            UserId = int.Parse(userId),
+                            UserId = parsedUserId,
                             GamesSum = mapSaveModel.gamesSum,
                             Wins = mapSaveModel.wins,
                             Loses = mapSaveModel.loses,
@@ -309,12 +214,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -323,36 +224,11 @@ namespace MS_Back_Maps.Controllers
         [HttpGet]
         public async Task<IActionResult> SaveMapsListCustomGet()
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "SaveMapsListCustomGet",
-                message = "Save list gotten",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("SaveMapsListCustomGet", "Custom save list gotten");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
@@ -373,12 +249,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -387,58 +259,21 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> RatePost([FromBody] RateMap rateMap)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "RatePost",
-                message = "Rate pasted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("RatePost", "Rate pasted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
-                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == rateMap.mapId)));
-                if (customMap == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The custom map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == rateMap.mapId);
+                var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
+                if (!success2) return result2!;
 
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == rateMap.mapId) && (cmap.UserId == parsedUserId));
-                if (customMapsInUser == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The customMap:user doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
+                if (!success3) return result3!;
 
                 if (customMapsInUser.Rate != 0)
                 {
@@ -459,12 +294,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -473,58 +304,21 @@ namespace MS_Back_Maps.Controllers
         [HttpPut]
         public async Task<IActionResult> RatePut([FromBody] RateMap rateMap)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "RatePut",
-                message = "New rate putted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("RatePut", "New rate putted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
-                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == rateMap.mapId)));
-                if (customMap == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The custom map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == rateMap.mapId);
+                var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
+                if (!success2) return result2!;
 
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == rateMap.mapId) && (cmap.UserId == parsedUserId));
-                if (customMapsInUser == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The customMap:user doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
+                if (!success3) return result3!;
 
                 if (customMapsInUser.Rate == 0)
                 {
@@ -545,12 +339,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -559,58 +349,21 @@ namespace MS_Back_Maps.Controllers
         [HttpDelete]
         public async Task<IActionResult> RateDelete(int idModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "RateDelete",
-                message = "Progress was gotten",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("RateDelete", "Rate deleted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
-                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idModel)));
-                if (customMap == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The custom map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == idModel);
+                var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
+                if (!success2) return result2!;
 
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.UserId == parsedUserId));
-                if (customMapsInUser == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The customMap:user doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
+                if (!success3) return result3!;
 
                 if (customMapsInUser.Rate == 0)
                 {
@@ -630,12 +383,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -644,48 +393,17 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> DownLoadPost([FromBody] IdModel idmodel) //можно заменить на переменную в запросе как у put или delete
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "DownLoadPost",
-                message = "Map download was posted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("DownLoadPost", "Map download was posted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idmodel.id)));
-                if (customMap == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The custom map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
+                if (!success2) return result2!;
 
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId == parsedUserId));
                 if (customMapsInUser != null)
@@ -698,7 +416,7 @@ namespace MS_Back_Maps.Controllers
                 {
                     CustomMapsInUser customMapsInUserNew = new CustomMapsInUser
                     {
-                        UserId = int.Parse(userId),
+                        UserId = parsedUserId,
                         CustomMapId = customMap.Id,
                         GamesSum = 0,
                         Wins = 0,
@@ -726,12 +444,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -740,58 +454,21 @@ namespace MS_Back_Maps.Controllers
         [HttpDelete]
         public async Task<IActionResult> DownLoadDelete(int idModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "HttpDelete",
-                message = "Map download was deleted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("DownLoadDelete", "Map download was deleted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == idModel);
-                if (customMap == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The custom map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
+                if (!success2) return result2!;
 
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.UserId == parsedUserId));
-                if (customMapsInUser == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The customMap:user doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
+                if (!success3) return result3!;
 
 
                 customMap.Downloads -= 1;
@@ -803,12 +480,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -819,58 +492,21 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> FavouritePost([FromBody] IdModel idmodel) //можно поменять так же как у downloadpost
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "FavouritePost",
-                message = "Map favourite mark was posted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("FavouritePost", "Map favourite mark was posted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idmodel.id)));
-                if (customMap == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The custom map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
+                if (!success2) return result2!;
 
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId == parsedUserId));
-                if (customMapsInUser == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The customMap:user doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
+                if (!success3) return result3!;
 
 
                 customMapsInUser.IsFavourite = true;
@@ -881,12 +517,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -895,58 +527,21 @@ namespace MS_Back_Maps.Controllers
         [HttpDelete]
         public async Task<IActionResult> FavouriteDelete([FromBody] IdModel idmodel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = "FavouriteDelete",
-                message = "Map favourite mark was deleted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("FavouriteDelete", "Map favourite mark was deleted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idmodel.id)));
-                if (customMap == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The custom map doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
-
+                var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
+                if (!success2) return result2!;
+                
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId == parsedUserId));
-                if (customMapsInUser == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The customMap:user doesn't exists";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
+                var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
+                if (!success3) return result3!;
 
 
                 customMapsInUser.IsFavourite = false;
@@ -957,12 +552,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -971,6 +562,81 @@ namespace MS_Back_Maps.Controllers
         {
             var message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
+        }
+
+        private LogModel LogModelCreate(string eventType, string message)
+        {
+            return new LogModel
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "CustomMapsInUsersController",
+                logLevel = "Info",
+                eventType = eventType,
+                message = message,
+                details = "",
+                errorCode = "200"
+            };
+        }
+
+        private async Task<(bool Success, IActionResult? Result, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
+        {
+            string? userId = _helpfuncs.GetUserIdFromToken(request);
+            if (string.IsNullOrEmpty(userId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "Invalid or missing token";
+                logModel.errorCode = "401";
+                await LogEventAsync(logModel);
+                return (false, Unauthorized(logModel.message), -1);
+            }
+
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User ID conversion in int failed";
+                logModel.errorCode = "500";
+                await LogEventAsync(logModel);
+                return (false, BadRequest(logModel.message), -1);
+            }
+
+            return (true, null, parsedUserId);
+        }
+
+        private async Task<(bool Success, IActionResult? Result)> CustomMapNullCheck(CustomMap? customMap, LogModel logModel)
+        {
+            if (customMap == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "The custom map doesn't exists";
+                logModel.errorCode = "404";
+                await LogEventAsync(logModel);
+                return (false, NotFound(logModel.message));
+            }
+            return (true, null);
+        }
+
+        private async Task<(bool Success, IActionResult? Result)> CustomMapsInUserNullCheck(CustomMapsInUser? customMapsInUser, LogModel logModel)
+        {
+            if (customMapsInUser == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "The customMap:user doesn't exists";
+                logModel.errorCode = "404";
+                await LogEventAsync(logModel);
+                return (false, NotFound(logModel.message));
+            }
+            return (true, null);
+        }
+
+        private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
+        {
+            logModel.eventType = "Error";
+            logModel.message = "Server error";
+            logModel.details = ex.Message;
+            logModel.errorCode = "500";
+            await LogEventAsync(logModel);
+            return logModel;
         }
     }
 }

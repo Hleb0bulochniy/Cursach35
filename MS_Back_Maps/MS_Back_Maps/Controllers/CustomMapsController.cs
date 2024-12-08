@@ -27,36 +27,11 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> CustomMapPost([FromBody] CustomMapData customMapData)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsController",
-                logLevel = "Info",
-                eventType = "CustomMapPost",
-                message = "Custom map was added",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("CustomMapPost", "Custom map was added");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
@@ -90,29 +65,15 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
         [Route("CustomMap/{idModel:int}")]
         [HttpGet]
         public async Task<IActionResult> CustomMapGet(int idModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsController",
-                logLevel = "Info",
-                eventType = "CustomMapGet",
-                message = "Custom map gotten",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("CustomMapGet", "Custom map gotten");
             try
             {
                 if (idModel <= 0)
@@ -152,12 +113,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
         [Route("CustomMap/{idModel:int}")]
@@ -165,17 +122,7 @@ namespace MS_Back_Maps.Controllers
         [HttpDelete]
         public async Task<IActionResult> CustomMapDelete(int idModel)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsController",
-                logLevel = "Info",
-                eventType = "CustomMapDelete",
-                message = "Custom map deleted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("CustomMapDelete", "Custom map deleted");
             try
             {
                 string? userId = _helpfuncs.GetUserIdFromToken(Request);
@@ -212,12 +159,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
         [Route("CustomMap")]
@@ -225,17 +168,7 @@ namespace MS_Back_Maps.Controllers
         [HttpPut]
         public async Task<IActionResult> CustomMapPut([FromBody] CustomMapData customMapData)
         {
-            LogModel logModel = new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsController",
-                logLevel = "Info",
-                eventType = "CustomMapPut",
-                message = "Custom map putted",
-                details = "",
-                errorCode = "200"
-            };
+            LogModel logModel = LogModelCreate("CustomMapPut", "Custom map putted");
             try
             {
                 string? userId = _helpfuncs.GetUserIdFromToken(Request);
@@ -286,12 +219,8 @@ namespace MS_Back_Maps.Controllers
             }
             catch (Exception ex)
             {
-                logModel.eventType = "Error";
-                logModel.message = "Server error";
-                logModel.details = ex.Message;
-                logModel.errorCode = "500";
-                await LogEventAsync(logModel);
-                return BadRequest(logModel.message);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
         }
 
@@ -301,6 +230,81 @@ namespace MS_Back_Maps.Controllers
         {
             var message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
+        }
+
+        private LogModel LogModelCreate(string eventType, string message)
+        {
+            return new LogModel
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "CustomMapsController",
+                logLevel = "Info",
+                eventType = eventType,
+                message = message,
+                details = "",
+                errorCode = "200"
+            };
+        }
+
+        private async Task<(bool Success, IActionResult? Result, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
+        {
+            string? userId = _helpfuncs.GetUserIdFromToken(request);
+            if (string.IsNullOrEmpty(userId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "Invalid or missing token";
+                logModel.errorCode = "401";
+                await LogEventAsync(logModel);
+                return (false, Unauthorized(logModel.message), -1);
+            }
+
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User ID conversion in int failed";
+                logModel.errorCode = "500";
+                await LogEventAsync(logModel);
+                return (false, BadRequest(logModel.message), -1);
+            }
+
+            return (true, null, parsedUserId);
+        }
+
+        private async Task<(bool Success, IActionResult? Result)> CustomMapNullCheck(CustomMap? customMap, LogModel logModel)
+        {
+            if (customMap == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "The custom map doesn't exists";
+                logModel.errorCode = "404";
+                await LogEventAsync(logModel);
+                return (false, NotFound(logModel.message));
+            }
+            return (true, null);
+        }
+
+        private async Task<(bool Success, IActionResult? Result)> CustomMapsInUserNullCheck(CustomMapsInUser? customMapsInUser, LogModel logModel)
+        {
+            if (customMapsInUser == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "The customMap:user doesn't exists";
+                logModel.errorCode = "404";
+                await LogEventAsync(logModel);
+                return (false, NotFound(logModel.message));
+            }
+            return (true, null);
+        }
+
+        private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
+        {
+            logModel.eventType = "Error";
+            logModel.message = "Server error";
+            logModel.details = ex.Message;
+            logModel.errorCode = "500";
+            await LogEventAsync(logModel);
+            return logModel;
         }
     }
 }
