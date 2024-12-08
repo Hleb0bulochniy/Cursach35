@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using MS_Back_Logs.Controllers;
 
 namespace MS_Back_Logs
 {
@@ -7,8 +8,9 @@ namespace MS_Back_Logs
         private readonly IConsumer<Ignore, string> _consumer;
 
         private readonly ILogger<ConsumerService> _logger;
+        private readonly LogsController _controller;
 
-        public ConsumerService(IConfiguration configuration, ILogger<ConsumerService> logger)
+        public ConsumerService(IConfiguration configuration, ILogger<ConsumerService> logger, LogsController logsController)
         {
             _logger = logger;
 
@@ -20,6 +22,7 @@ namespace MS_Back_Logs
             };
 
             _consumer = new ConsumerBuilder<Ignore, string>(consumerConfig).Build();
+            _controller = logsController;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -44,7 +47,9 @@ namespace MS_Back_Logs
 
                 var message = consumeResult.Message.Value;
 
-                _logger.LogInformation($"Received inventory update: {message}");
+                //_logger.LogInformation($"Received inventory update: {message}");
+
+                _controller.LogPost(message);
             }
             catch (Exception ex)
             {

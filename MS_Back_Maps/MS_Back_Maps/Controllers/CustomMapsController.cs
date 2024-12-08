@@ -14,27 +14,61 @@ namespace MS_Back_Maps.Controllers
     public class CustomMapsController : ControllerBase
     {
         private readonly HelpFuncs _helpfuncs;
+        private readonly MapsContext _context;
         private readonly ProducerService _producerService;
-        public CustomMapsController(HelpFuncs helpfuncs, ProducerService producerService)
+        public CustomMapsController(HelpFuncs helpfuncs, ProducerService producerService, MapsContext mapsContext)
         {
             _helpfuncs = helpfuncs;
             _producerService = producerService;
+            _context = mapsContext;
         }
         [Route("CustomMap")]
-        //[Authorize]
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CustomMapPost([FromBody] CustomMapData customMapData)
         {
+            LogModel logModel = new LogModel
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "CustomMapsController",
+                logLevel = "Info",
+                eventType = "CustomMapPost",
+                message = "Custom map was added",
+                details = "",
+                errorCode = "200"
+            };
             try
             {
-                /*string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (userId == null)
+                string? userId = _helpfuncs.GetUserIdFromToken(Request);
+                if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("Невалидный или отсутствующий токен");
+                    logModel.logLevel = "Error";
+                    logModel.message = "Invalid or missing token";
+                    logModel.errorCode = "401";
+                    await LogEventAsync(logModel);
+                    return Unauthorized(logModel.message);
                 }
+                if (!int.TryParse(userId, out int parsedUserId))
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "User ID conversion in int failed";
+                    logModel.errorCode = "500";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
+                logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
-                MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
+                MapsContext context = new MapsContext();
+                if (customMapData == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "New data in body is null";
+                    logModel.errorCode = "404";
+                    await LogEventAsync(logModel);
+                    return NotFound(logModel.message);
+                }
                 CustomMap customMap = new CustomMap
                 {
                     MapName = customMapData.mapName,
@@ -48,42 +82,55 @@ namespace MS_Back_Maps.Controllers
                     Downloads = customMapData.downloads,
                     About = customMapData.about
                 };
-                //проверить, существует ли уже карта
-                context.CustomMaps.Add(customMap);
-                context.SaveChanges();*/
-                LogModel logModel = new LogModel
-                {
-                    userId = 123,
-                    dateTime = DateTime.Now,
-                    serviceName = "CustomMapsController",
-                    logLevel = "",
-                    eventType = "",
-                    message = "Ok",
-                    details = "",
-                    errorCode = ""
-                };
-                var message = JsonSerializer.Serialize(logModel);
-                await _producerService.ProduceAsync("LogUpdates", message);
-                return Ok("Данные загружены на сервер"); //логирование
+                await _context.CustomMaps.AddAsync(customMap);
+                await _context.SaveChangesAsync();
+
+                await LogEventAsync(logModel);
+                return Ok(logModel.message);
             }
-            catch
+            catch (Exception ex)
             {
-                //залогировать ошибку
-                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+                logModel.eventType = "Error";
+                logModel.message = "Server error";
+                logModel.details = ex.Message;
+                logModel.errorCode = "500";
+                await LogEventAsync(logModel);
+                return BadRequest(logModel.message);
             }
         }
-        [Route("CustomMap")]
+        [Route("CustomMap/{idModel:int}")]
         [HttpGet]
-        public IActionResult CustomMapGet([FromBody] IdModel idModel)
+        public async Task<IActionResult> CustomMapGet(int idModel)
         {
+            LogModel logModel = new LogModel
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "CustomMapsController",
+                logLevel = "Info",
+                eventType = "CustomMapGet",
+                message = "Custom map gotten",
+                details = "",
+                errorCode = "200"
+            };
             try
             {
-                if (idModel.id <= 0)
-                    return BadRequest("ID меньше нуля");
-                MapsContext context = new MapsContext();
-                CustomMap? customMap = context.CustomMaps.SingleOrDefault(cmap => cmap.Id == int.Parse(idModel.id.ToString()));
+                if (idModel <= 0)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Requested mapId is less than 0";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == idModel);
                 if (customMap == null)
-                    return NotFound("Карта с указанным ID не найдена");
+                {
+                    logModel.logLevel="Error";
+                    logModel.message = "Map was not found by MapId";
+                    logModel.errorCode = "400";
+                    return NotFound(logModel.message);
+                }
 
                 CustomMapData customMapData = new CustomMapData
                 {
@@ -100,76 +147,160 @@ namespace MS_Back_Maps.Controllers
                     downloads = customMap.Downloads,
                     about = customMap.About
                 };
-                return Ok(customMapData); //логирование
+                await LogEventAsync(logModel);
+                return Ok(customMapData);
             }
             catch (Exception ex)
             {
-                //залогировать ошибку
-                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+                logModel.eventType = "Error";
+                logModel.message = "Server error";
+                logModel.details = ex.Message;
+                logModel.errorCode = "500";
+                await LogEventAsync(logModel);
+                return BadRequest(logModel.message);
             }
         }
-        [Route("CustomMap")]
+        [Route("CustomMap/{idModel:int}")]
         [Authorize]
         [HttpDelete]
-        public IActionResult CustomMapDelete([FromBody] IdModel idModel)
+        public async Task<IActionResult> CustomMapDelete(int idModel)
         {
+            LogModel logModel = new LogModel
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "CustomMapsController",
+                logLevel = "Info",
+                eventType = "CustomMapDelete",
+                message = "Custom map deleted",
+                details = "",
+                errorCode = "200"
+            };
             try
             {
                 string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (userId == null)
+                if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("Невалидный или отсутствующий токен");
+                    logModel.logLevel = "Error";
+                    logModel.message = "Invalid or missing token";
+                    logModel.errorCode = "401";
+                    await LogEventAsync(logModel);
+                    return Unauthorized(logModel.message);
                 }
+                if (!int.TryParse(userId, out int parsedUserId))
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "User ID conversion in int failed";
+                    logModel.errorCode = "500";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
+                logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
-                MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
-                CustomMap? customMap = context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idModel.id) & (cmap.CreatorId.ToString() == userId)));
-                if (customMap == null) 
-                    return NotFound("Карта с указанным ID не найдена");
-                context.CustomMaps.Remove(customMap);
-                context.SaveChanges();
-                return Ok("Карта удалена"); //логирование
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.CreatorId == parsedUserId));
+                if (customMap == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Map wasn't found by mapId and userId";
+                    logModel.errorCode = "404";
+                    return NotFound(logModel.message);
+                }
+                _context.CustomMaps.Remove(customMap);
+                await _context.SaveChangesAsync();
+                return Ok(logModel.message);
             }
-            catch
+            catch (Exception ex)
             {
-                //залогировать ошибку
-                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+                logModel.eventType = "Error";
+                logModel.message = "Server error";
+                logModel.details = ex.Message;
+                logModel.errorCode = "500";
+                await LogEventAsync(logModel);
+                return BadRequest(logModel.message);
             }
         }
         [Route("CustomMap")]
         [Authorize]
         [HttpPut]
-        public IActionResult CustomMapPut([FromBody] CustomMapData customMapData)
+        public async Task<IActionResult> CustomMapPut([FromBody] CustomMapData customMapData)
         {
+            LogModel logModel = new LogModel
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "CustomMapsController",
+                logLevel = "Info",
+                eventType = "CustomMapPut",
+                message = "Custom map putted",
+                details = "",
+                errorCode = "200"
+            };
             try
             {
                 string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (userId == null)
+                if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("Невалидный или отсутствующий токен");
+                    logModel.logLevel = "Error";
+                    logModel.message = "Invalid or missing token";
+                    logModel.errorCode = "401";
+                    await LogEventAsync(logModel);
+                    return Unauthorized(logModel.message);
                 }
+                if (!int.TryParse(userId, out int parsedUserId))
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "User ID conversion in int failed";
+                    logModel.errorCode = "500";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
+                logModel.userId = parsedUserId;
                 //Проверить, существует ли такой пользователь в Auth и залогировать
 
-                MapsContext context = new MapsContext(); //карты с одинаковыми названиями могут существовать
-                CustomMap? customMap = context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == customMapData.mapID) & (cmap.CreatorId.ToString() == userId)));
+                if (customMapData == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "New data in body is null";
+                    logModel.errorCode = "404";
+                    await LogEventAsync(logModel);
+                    return NotFound(logModel.message);
+                }
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == customMapData.mapID) && (cmap.CreatorId == parsedUserId)));
                 if (customMap == null)
-                    return NotFound("Карта с указанным ID не найдена");
-                
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Map wasn't found by mapId and userId";
+                    logModel.errorCode = "404";
+                    return NotFound(logModel.message);
+                }
+
                 customMap.MapName = customMapData.mapName;
                 customMap.BombCount = customMapData.bombCount;
                 customMap.MapSize = customMapData.mapSize;
                 customMap.MapType = (int)customMapData.mapType;
                 customMap.Downloads = customMapData.downloads;
 
-                context.SaveChanges();
-                return Ok("Информация о карте обновлена"); //логирование
+                await _context.SaveChangesAsync();
+                return Ok(logModel.message);
             }
-            catch
+            catch (Exception ex)
             {
-                //залогировать ошибку
-                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+                logModel.eventType = "Error";
+                logModel.message = "Server error";
+                logModel.details = ex.Message;
+                logModel.errorCode = "500";
+                await LogEventAsync(logModel);
+                return BadRequest(logModel.message);
             }
         }
-        
+
+
+
+        private async Task LogEventAsync(LogModel logModel)
+        {
+            var message = JsonSerializer.Serialize(logModel);
+            await _producerService.ProduceAsync("LogUpdates", message);
+        }
     }
 }
