@@ -1,12 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "CCHh8hy7jKueyxwPLRvwm+/xdPwfi8EintmUeOTnuHFmFgiVJQE+dKyX4YnzUzawygDgel0R0sEAlAGD/xnqoA==",
+  "dgSpecHash": "vY3lppNw9gdZLd3tGMIJl+zS0bDPPfwOLGc2f6Ir+4Sx2THh78agAFBcoSY9wjzLYPQtpQlqgslQEwxlePn6Qw==",
   "success": true,
   "projectFilePath": "C:\\Users\\sacho\\OneDrive\\Рабочий стол\\Cursach35\\MS_Back_Auth\\MS_Back_Auth\\MS_Back_Auth.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\sacho\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\sacho\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
+    "C:\\Users\\sacho\\.nuget\\packages\\confluent.kafka\\2.6.1\\confluent.kafka.2.6.1.nupkg.sha512",
     "C:\\Users\\sacho\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
+    "C:\\Users\\sacho\\.nuget\\packages\\librdkafka.redist\\2.6.1\\librdkafka.redist.2.6.1.nupkg.sha512",
     "C:\\Users\\sacho\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.11\\microsoft.aspnetcore.authentication.jwtbearer.8.0.11.nupkg.sha512",
     "C:\\Users\\sacho\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\7.0.0\\microsoft.bcl.asyncinterfaces.7.0.0.nupkg.sha512",
     "C:\\Users\\sacho\\.nuget\\packages\\microsoft.build.framework\\17.8.3\\microsoft.build.framework.17.8.3.nupkg.sha512",

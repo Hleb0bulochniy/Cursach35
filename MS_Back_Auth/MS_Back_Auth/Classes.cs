@@ -33,4 +33,33 @@
     {
         public string password { get; set; }
     }
+    public class TokenResponceClass
+    {
+        public string access_token { get; set; }
+        public string refresh_token { get; set; }
+        public string username { get; set; }
+    };
+
+    //для кафки
+    [Serializable]
+    public class LogModel
+    {
+        public int userId { get; set; }
+        public DateTime dateTime { get; set; }
+        public string serviceName { get; set; }
+        public string logLevel { get; set; }
+        public string eventType { get; set; }
+        public string message { get; set; }
+        public string details { get; set; }
+        public string errorCode { get; set; }
+    }
+
+
+    [Serializable]
+    public class UserIdCheckModel
+    {
+        public string requestId { get; set; }
+        public int userId { get; set; }
+        public bool isValid { get; set; }
+    }
 }

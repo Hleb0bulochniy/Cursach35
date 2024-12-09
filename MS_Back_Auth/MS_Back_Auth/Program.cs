@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using MS_Back_Auth.Controllers;
+using System;
+using MS_Back_Auth.Data;
 
 namespace MS_Back_Auth
 {
@@ -16,8 +19,12 @@ namespace MS_Back_Auth
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-
             builder.Services.AddAuthorization();
+            builder.Services.AddScoped<HelpFuncs>();
+            builder.Services.AddSingleton<AuthController>();
+            builder.Services.AddSingleton<AuthContext>();
+            builder.Services.AddSingleton<ProducerService>();
+            builder.Services.AddHostedService<ConsumerService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {

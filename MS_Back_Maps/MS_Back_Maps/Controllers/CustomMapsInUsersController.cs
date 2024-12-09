@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure.Core;
+using Confluent.Kafka;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MS_Back_Maps.Data;
@@ -32,7 +34,11 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
+
                 if (mapSaveModel == null)
                 {
                     logModel.logLevel = "Error";
@@ -93,7 +99,7 @@ namespace MS_Back_Maps.Controllers
             }
         }
 
-        [Route("Progress/{idModel:int}")]
+        [Route("ProgressCustom/{idModel:int}")]
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> ProgressCustomGet(int idModel)
@@ -104,7 +110,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idModel)));
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
@@ -153,7 +162,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 if (mapSaveListModel.mapSaveList == null || !mapSaveListModel.mapSaveList.Any())
                 {
@@ -230,7 +242,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 List<CustomMapsInUser> maps = _context.CustomMapsInUsers
                                    .Where(map => map.UserId == parsedUserId)
@@ -265,7 +280,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == rateMap.mapId);
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
@@ -310,7 +328,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == rateMap.mapId);
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
@@ -355,7 +376,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == idModel);
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
@@ -399,7 +423,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idmodel.id)));
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
@@ -460,7 +487,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == idModel);
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
@@ -485,7 +515,7 @@ namespace MS_Back_Maps.Controllers
             }
         }
 
-        
+
 
         [Route("Favourite")]
         [Authorize]
@@ -498,7 +528,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idmodel.id)));
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
@@ -533,12 +566,15 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idmodel.id)));
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
-                
+
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId == parsedUserId));
                 var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success3) return result3!;
@@ -558,11 +594,53 @@ namespace MS_Back_Maps.Controllers
         }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         private async Task LogEventAsync(LogModel logModel)
         {
             var message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
         }
+
+        private async Task UserIdCheckEventAsync(UserIdCheckModel userIdCheckModel)
+        {
+            var message = JsonSerializer.Serialize(userIdCheckModel);
+            await _producerService.ProduceAsync("UserIdCheckRequest", message);
+        }
+
+        private async Task<LogModel> UserIdCheck(string requestId, int parsedUserId, LogModel logModel)
+        {
+            UserIdCheckModel requestMessage = new UserIdCheckModel
+            {
+                requestId = requestId,
+                userId = parsedUserId,
+                isValid = false
+            };
+            UserIdCheckEventAsync(requestMessage);
+            var response = await _producerService.WaitForKafkaResponseAsync(requestId, "UserIdCheckResponce", TimeSpan.FromSeconds(10));
+            if (response == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User does not exist";
+                logModel.errorCode = "400";
+                await LogEventAsync(logModel);
+            }
+            return logModel;
+        }
+
 
         private LogModel LogModelCreate(string eventType, string message)
         {

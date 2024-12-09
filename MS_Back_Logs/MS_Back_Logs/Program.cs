@@ -3,6 +3,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using MS_Back_Logs.Controllers;
+using System;
+using MS_Back_Logs.Data;
 
 namespace MS_Back_Logs
 {
@@ -19,6 +21,7 @@ namespace MS_Back_Logs
 
             builder.Services.AddAuthorization();
             builder.Services.AddSingleton<LogsController>();
+            builder.Services.AddSingleton<LogsContext>();
             builder.Services.AddHostedService<ConsumerService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>

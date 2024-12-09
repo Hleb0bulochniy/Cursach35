@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace MS_Back_Auth.Controllers
 {
@@ -36,162 +39,264 @@ namespace MS_Back_Auth.Controllers
             }
             return sOutput.ToString();
         }
-        //передать в лог
     }
 
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly HelpFuncs _helpfuncs;
+        private readonly AuthContext _context;
+        private readonly ProducerService _producerService;
+        public AuthController(AuthContext authContext, ProducerService producerService, HelpFuncs helpfuncs)
+        {
+            _helpfuncs = helpfuncs;
+            _context = authContext;
+            _producerService = producerService;
+        }
         [Route("UserRegistration")]
         [HttpPost]
-        public IActionResult UserRegistration([FromBody] RegistrationClass model)
+        public async Task<IActionResult> UserRegistrationPost([FromBody] RegistrationClass registrationClass)
         {
-            if (model.password1 == model.password2)
+            LogModel logModel = LogModelCreate("UserRegistrationPost", "Registration successful");
+            try
             {
-                AuthContext context = new AuthContext();
-                if (!context.Users.Any(u => u.Username == model.userName || u.Email == model.email))
+                if (registrationClass.password1 == registrationClass.password2)
                 {
-                    string cryptedPassword = Cryptography.ConvertPassword(model.password1);
-                    User user = new User()
+                    if (!_context.Users.Any(u => u.Username == registrationClass.userName || u.Email == registrationClass.email))
                     {
-                        Username = model.userName,
-                        Email = model.email,
-                        Password = cryptedPassword,
-                    };
-                    context.Users.Add(user);
-                    context.SaveChanges();
-                    User newUser = context.Users.SingleOrDefault(u => ((u.Username == user.Username)))!;
-                    Console.WriteLine("регистрация " + newUser.Id); //оформить в лог
-                    return Ok(newUser.Id.ToString());
+                        string cryptedPassword = Cryptography.ConvertPassword(registrationClass.password1);
+                        User user = new User()
+                        {
+                            Username = registrationClass.userName,
+                            Email = registrationClass.email,
+                            Password = cryptedPassword,
+                        };
+                        await _context.Users.AddAsync(user);
+                        await _context.SaveChangesAsync();
+                        await LogEventAsync(logModel);
+                        return Ok(logModel.message);
+                    }
+                    else
+                    {
+                        logModel.logLevel = "Error";
+                        logModel.message = "The user already exists";
+                        logModel.errorCode = "400";
+                        await LogEventAsync(logModel);
+                        return BadRequest(logModel.message);
+                    }
                 }
-                else return (BadRequest("The user already exists"));
+                else
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Passwords don't match";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest("Passwords do not match");
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
-            //передать в лог
         }
 
         [Route("UserLogin")]
         [HttpPost]
-        public IActionResult UserLogin([FromBody] LoginClass model)
+        public async Task<IActionResult> UserLoginPost([FromBody] LoginClass model)
         {
-            AuthContext context = new AuthContext();
-            string cryptedPassword = Cryptography.ConvertPassword(model.password);
-            User? dbuser = context.Users.FirstOrDefault(u => ((u.Username == model.userName) & (u.Password == cryptedPassword))); //переделать если пароль не совпадает
-            if (dbuser == null) return BadRequest("The user does not exists");
-            if (dbuser.Password != cryptedPassword) BadRequest("The password does not match");
-
-            var claims = new List<Claim>
+            LogModel logModel = LogModelCreate("UserLoginPost", "Login successful");
+            try
             {
-                new Claim(ClaimTypes.NameIdentifier, dbuser.Id.ToString()),
-                new Claim(ClaimTypes.Name, dbuser.Username),
-            };
+                string cryptedPassword = Cryptography.ConvertPassword(model.password);
+                User? dbuser = _context.Users.FirstOrDefault(u => u.Username == model.userName); //переделать если пароль не совпадает
+                if (dbuser == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "There is no user with this login";
+                    logModel.errorCode = "401";
+                    await LogEventAsync(logModel);
+                    return Unauthorized(logModel.message);
+                }
+                else if (dbuser.Password != cryptedPassword)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "The password doesn't match";
+                    logModel.errorCode = "401";
+                    await LogEventAsync(logModel);
+                    return Unauthorized(logModel.message);
+                }
 
-            var jwt = new JwtSecurityToken(
-            issuer: AuthOptions.ISSUER,
-            audience: AuthOptions.AUDIENCE,
-            claims: claims,
-            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(24)),
-            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+                TokenResponceClass response = CreateJWT(dbuser.Username, dbuser.Id.ToString());
 
-            var jwtr = new JwtSecurityToken(
-            issuer: AuthOptions.ISSUER,
-            audience: AuthOptions.AUDIENCE,
-            claims: claims,
-            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(300)),
-            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            var encodedJwtr = new JwtSecurityTokenHandler().WriteToken(jwt);
-
-            var response = new
+                await LogEventAsync(logModel);
+                return Ok(response);
+            }
+            catch (Exception ex)
             {
-                access_token = encodedJwt,
-                refresh_token = encodedJwtr,
-                username = dbuser.Username,
-            };
-            Console.WriteLine("залогинился"); //переделать в лог
-            return Ok(response);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
+            }
         }
 
-        [Authorize]
         [Route("RefreshToken")]
-        [HttpPost]
-        public IActionResult RefreshToken() //если токен пустой, добавить обработчик
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> RefreshTokenGet() //если токен пустой, добавить обработчик
         {
-            string? authorizationHeader = Request.Headers["Authorization"];
-            string token = authorizationHeader.Replace("Bearer ", "");
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-            string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
-            AuthContext context = new AuthContext();
-            string userName = context.Users.FirstOrDefault(u => (u.Id == int.Parse(userId))).Username; //стоит ли это оставлять так или лучше доставать значение из токена
-
-
-            var claims = new List<Claim>
+            LogModel logModel = LogModelCreate("RefreshTokenGet", "Reftesh token gotten");
+            try
             {
-                new Claim(ClaimTypes.NameIdentifier,userId),
-                new Claim(ClaimTypes.Name,userName),
-            };
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
+                logModel.userId = parsedUserId;
+                string userName = _context.Users.FirstOrDefault(u => u.Id == parsedUserId).Username; //стоит ли это оставлять так или лучше доставать значение из токена
 
-            var jwt = new JwtSecurityToken(
-            issuer: AuthOptions.ISSUER,
-            audience: AuthOptions.AUDIENCE,
-            claims: claims,
-            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(24)),
-            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+                TokenResponceClass response = CreateJWT(userName, parsedUserId.ToString());
 
-            var jwtr = new JwtSecurityToken(
-            issuer: AuthOptions.ISSUER,
-            audience: AuthOptions.AUDIENCE,
-            claims: claims,
-            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(300)),
-            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            var encodedJwtr = new JwtSecurityTokenHandler().WriteToken(jwt);
-
-            var response = new
+                await LogEventAsync(logModel);
+                return Ok(response);
+            }
+            catch (Exception ex)
             {
-                access_token = encodedJwt,
-                refresh_token = encodedJwtr,
-                username = userName, //нужен ли UserName
-            };
-            //передать в лог
-
-            return Ok(response);
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
+            }
         }
 
         [Authorize]
         [Route("PasswordCheck")]
         [HttpPost]
-        public IActionResult PasswordCheck([FromBody] PasswordClass password)
+        public async Task<IActionResult> PasswordCheck([FromBody] PasswordClass password)
         {
-            string? authorizationHeader = Request.Headers["Authorization"];
-            string token = authorizationHeader!.Replace("Bearer ", "");
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-            string userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
-            AuthContext context = new AuthContext();
-            User? user = context.Users.SingleOrDefault(u => u.Id == int.Parse(userId));
-            if (user is User u)
+            LogModel logModel = LogModelCreate("PasswordCheck", "The password is correct");
+            try
             {
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
+                logModel.userId = parsedUserId;
+                User? user = _context.Users.FirstOrDefault(u => u.Id == parsedUserId);
                 string cryptedPassword = Cryptography.ConvertPassword(password.password);
-                if (cryptedPassword == u.Password)
+
+                if (user == null)
                 {
-                    Console.WriteLine("совпало"); //передать в лог
-                    return Ok("true");
+                    logModel.logLevel = "Error";
+                    logModel.message = "There is no such user";
+                    logModel.errorCode = "401";
+                    await LogEventAsync(logModel);
+                    return Unauthorized(logModel.message);
                 }
-                else
+
+                else if (user.Password != cryptedPassword)
                 {
-                    Console.WriteLine("не совпало"); //передать в лог
-                    return Ok("false");
+                    logModel.logLevel = "Error";
+                    logModel.message = "The password doesn't match";
+                    logModel.errorCode = "401";
+                    await LogEventAsync(logModel);
+                    return Unauthorized(logModel.message);
                 }
+                return Ok(logModel.message);
             }
-            else
-            { //передать в лог
-                return BadRequest("No user");
+            catch (Exception ex)
+            {
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return BadRequest(updatedLogModel.message);
             }
+        }
+
+        [Route("UserIdCheck/{idModel:int}")]
+        [HttpGet]
+        public async Task<bool> UserIdCheck(int idModel)
+        {
+            return await _context.Users.AnyAsync(u => u.Id == idModel);
+        }
+
+        private TokenResponceClass CreateJWT(string userName, string userId)
+        {
+            var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier,userId),
+                    new Claim(ClaimTypes.Name,userName),
+                };
+
+            var jwt = new JwtSecurityToken(
+            issuer: AuthOptions.ISSUER,
+            audience: AuthOptions.AUDIENCE,
+            claims: claims,
+            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(24)),
+            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+            var jwtr = new JwtSecurityToken(
+            issuer: AuthOptions.ISSUER,
+            audience: AuthOptions.AUDIENCE,
+            claims: claims,
+            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(300)),
+            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+            var encodedJwtr = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+            TokenResponceClass response = new TokenResponceClass
+            {
+                access_token = encodedJwt,
+                refresh_token = encodedJwtr,
+                username = userName,
+            };
+            return response;
+        }
+
+        private async Task LogEventAsync(LogModel logModel)
+        {
+            var message = JsonSerializer.Serialize(logModel);
+            await _producerService.ProduceAsync("LogUpdates", message);
+        }
+
+        private LogModel LogModelCreate(string eventType, string message)
+        {
+            return new LogModel
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "AuthController",
+                logLevel = "Info",
+                eventType = eventType,
+                message = message,
+                details = "",
+                errorCode = "200"
+            };
+        }
+
+        private async Task<(bool Success, IActionResult? Result, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
+        {
+            string? userId = _helpfuncs.GetUserIdFromToken(request);
+            if (string.IsNullOrEmpty(userId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "Invalid or missing token";
+                logModel.errorCode = "401";
+                await LogEventAsync(logModel);
+                return (false, Unauthorized(logModel.message), -1);
+            }
+
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User ID conversion in int failed";
+                logModel.errorCode = "500";
+                await LogEventAsync(logModel);
+                return (false, BadRequest(logModel.message), -1);
+            }
+
+            return (true, null, parsedUserId);
+        }
+
+        private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
+        {
+            logModel.eventType = "Error";
+            logModel.message = "Server error";
+            logModel.details = ex.Message;
+            logModel.errorCode = "500";
+            await LogEventAsync(logModel);
+            return logModel;
         }
     }
 }

@@ -36,7 +36,11 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
+
                 if (mapSaveModel == null)
                 {
                     logModel.logLevel = "Error";
@@ -108,7 +112,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 Map? map = _context.Maps.FirstOrDefault(map => ((map.Id == idModel)));
                 var (success2, result2) = await MapNullCheck(map, logModel);
@@ -157,7 +164,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 if (mapSaveListModel.mapSaveList == null || !mapSaveListModel.mapSaveList.Any())
                 {
@@ -234,7 +244,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 List<MapsInUser> maps = _context.MapsInUsers
                                    .Where(map => map.UserId == parsedUserId)
@@ -263,6 +276,32 @@ namespace MS_Back_Maps.Controllers
         {
             var message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
+        }
+
+        private async Task UserIdCheckEventAsync(UserIdCheckModel userIdCheckModel)
+        {
+            var message = JsonSerializer.Serialize(userIdCheckModel);
+            await _producerService.ProduceAsync("UserIdCheckRequest", message);
+        }
+
+        private async Task<LogModel> UserIdCheck(string requestId, int parsedUserId, LogModel logModel)
+        {
+            UserIdCheckModel requestMessage = new UserIdCheckModel
+            {
+                requestId = requestId,
+                userId = parsedUserId,
+                isValid = false
+            };
+            UserIdCheckEventAsync(requestMessage);
+            var response = await _producerService.WaitForKafkaResponseAsync(requestId, "UserIdCheckResponce", TimeSpan.FromSeconds(10));
+            if (response == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User does not exist";
+                logModel.errorCode = "400";
+                await LogEventAsync(logModel);
+            }
+            return logModel;
         }
 
         private LogModel LogModelCreate(string eventType, string message)

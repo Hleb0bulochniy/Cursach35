@@ -33,7 +33,10 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 MapsContext context = new MapsContext();
                 if (customMapData == null)
@@ -125,25 +128,13 @@ namespace MS_Back_Maps.Controllers
             LogModel logModel = LogModelCreate("CustomMapDelete", "Custom map deleted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.CreatorId == parsedUserId));
                 if (customMap == null)
@@ -171,25 +162,13 @@ namespace MS_Back_Maps.Controllers
             LogModel logModel = LogModelCreate("CustomMapPut", "Custom map putted");
             try
             {
-                string? userId = _helpfuncs.GetUserIdFromToken(Request);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Invalid or missing token";
-                    logModel.errorCode = "401";
-                    await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
-                }
-                if (!int.TryParse(userId, out int parsedUserId))
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "User ID conversion in int failed";
-                    logModel.errorCode = "500";
-                    await LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
-                }
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
                 logModel.userId = parsedUserId;
-                //Проверить, существует ли такой пользователь в Auth и залогировать
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "400") return BadRequest(logModel.message);
 
                 if (customMapData == null)
                 {
@@ -230,6 +209,32 @@ namespace MS_Back_Maps.Controllers
         {
             var message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
+        }
+
+        private async Task UserIdCheckEventAsync(UserIdCheckModel userIdCheckModel)
+        {
+            var message = JsonSerializer.Serialize(userIdCheckModel);
+            await _producerService.ProduceAsync("UserIdCheckRequest", message);
+        }
+
+        private async Task<LogModel> UserIdCheck(string requestId, int parsedUserId, LogModel logModel)
+        {
+            UserIdCheckModel requestMessage = new UserIdCheckModel
+            {
+                requestId = requestId,
+                userId = parsedUserId,
+                isValid = false
+            };
+            UserIdCheckEventAsync(requestMessage);
+            var response = await _producerService.WaitForKafkaResponseAsync(requestId, "UserIdCheckResponce", TimeSpan.FromSeconds(10));
+            if (response == null)
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User does not exist";
+                logModel.errorCode = "400";
+                await LogEventAsync(logModel);
+            }
+            return logModel;
         }
 
         private LogModel LogModelCreate(string eventType, string message)

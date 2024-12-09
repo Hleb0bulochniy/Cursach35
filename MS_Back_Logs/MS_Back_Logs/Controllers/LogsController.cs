@@ -7,16 +7,22 @@ using System.Security.Claims;
 using MS_Back_Logs.Data;
 using MS_Back_Logs.Models;
 using System.Text.Json;
+using System;
 
 namespace MS_Back_Logs.Controllers
 {
     [ApiController]
-    public class LogsController : ControllerBase
+    public class LogsController : ControllerBase //Надо ли логировать логи
     {
+        private readonly LogsContext _context;
+        public LogsController(LogsContext logsContext)
+        {
+            _context = logsContext;
+        }
         [Route("Log")]
         //[Authorize] //сделать роль админа
         [HttpPost]
-        public IActionResult LogPost(string kafkaMessage)
+        public async Task<IActionResult> LogPost(string kafkaMessage)
         {
             try
             {
@@ -24,41 +30,29 @@ namespace MS_Back_Logs.Controllers
 
                 if (logData == null)
                 {
-                    return BadRequest("Присланные данные пусты");
+                    return BadRequest("The log data is empty");
                 }
-
-                LogsContext context = new LogsContext();
 
                 Log log = new Log //для каждого поставить значение в случае null
                 {
                     UserId = logData.userId,
                     DateTime = logData.dateTime,
-                    ServiceName = logData.serviceName,
-                    LogLevel = logData.logLevel,
-                    EventType = logData.eventType,
-                    Message = logData.message,
-                    Details = logData.details,
-                    ErrorCode = logData.errorCode
+                    ServiceName = logData.serviceName.IsNullOrEmpty() ? "empty" : logData.serviceName,
+                    LogLevel = logData.logLevel.IsNullOrEmpty() ? "empty" : logData.logLevel,
+                    EventType = logData.eventType.IsNullOrEmpty() ? "empty" : logData.eventType,
+                    Message = logData.message.IsNullOrEmpty() ? "empty" : logData.message,
+                    Details = logData.details.IsNullOrEmpty() ? "empty" : logData.details,
+                    ErrorCode = logData.errorCode.IsNullOrEmpty() ? "empty" : logData.errorCode
                 };
-                context.Logs.Add(log);
+                _context.Logs.Add(log);
 
-                context.SaveChanges();
-                return Ok("Данные внесены"); //логирование
+                await _context.SaveChangesAsync();
+                return Ok("Log input successful");
             }
             catch
             {
-                //залогировать ошибку
-                return BadRequest("Произошла ошибка на сервере"); //дописать код ошибки чтобы найти по логам
+                return BadRequest("Server error");
             }
         }
-
-        /*[Route("Log123")]
-        [HttpPost]
-        public IActionResult Log123Post(string kafkaMessage)
-        {
-            var logData = JsonSerializer.Deserialize<LogModel>(kafkaMessage);
-            Console.WriteLine(logData.serviceName);
-            return(Ok());
-        }*/
     }
 }

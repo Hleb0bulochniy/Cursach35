@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MS_Back_Logs")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5575263b4401bc52356a56d1ae92acebf7e45f8e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+29486a50e69fb571b0ed785eb3364c8f20d36168")]
 [assembly: System.Reflection.AssemblyProductAttribute("MS_Back_Logs")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MS_Back_Logs")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
