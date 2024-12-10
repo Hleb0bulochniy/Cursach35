@@ -29,6 +29,6 @@ namespace MS_Back_Maps.Models
         [Column("about")]
         public string About { get; set; }
 
-        public ICollection<MapsInUser> MapsInUsers { get; set; } = null!;
+        public ICollection<CustomMapsInUser> CustomMapsInUser { get; set; } = null!;
     }
 }

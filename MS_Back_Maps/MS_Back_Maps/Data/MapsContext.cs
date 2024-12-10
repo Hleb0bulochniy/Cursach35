@@ -12,7 +12,7 @@ namespace MS_Back_Maps.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Data Source=MSI\SQLEXPRESS;Initial Catalog=MS_Auth;Persist Security Info=True;User ID=daniil;Password=test;Trust Server Certificate=True");
+            optionsBuilder.UseSqlServer(@"Data Source=MSI\SQLEXPRESS;Initial Catalog=MS_Maps;Persist Security Info=True;User ID=daniil;Password=test;Trust Server Certificate=True");
         }
     }
 }

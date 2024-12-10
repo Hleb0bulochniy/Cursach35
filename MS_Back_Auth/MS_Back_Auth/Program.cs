@@ -20,11 +20,12 @@ namespace MS_Back_Auth
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddAuthorization();
-            builder.Services.AddScoped<HelpFuncs>();
-            builder.Services.AddSingleton<AuthController>();
+
+            builder.Services.AddSingleton<HelpFuncs>();
             builder.Services.AddSingleton<AuthContext>();
+            builder.Services.AddSingleton<AuthController>();
             builder.Services.AddSingleton<ProducerService>();
-            builder.Services.AddHostedService<ConsumerService>();
+            //builder.Services.AddHostedService<ConsumerService>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
@@ -52,7 +53,7 @@ namespace MS_Back_Auth
             app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
 
