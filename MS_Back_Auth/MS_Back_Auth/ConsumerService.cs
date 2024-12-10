@@ -61,14 +61,15 @@ namespace MS_Back_Auth
             if (request == null) return;
 
             // Логика проверки существования пользователя
-            bool userExists = await _controller.UserIdCheck(request.userId);
+            (bool userExists, string userName) = await _controller.UserIdCheck(request.userId);
 
             // Создание ответа
             UserIdCheckModel response = new UserIdCheckModel
             {
                 requestId = request.requestId,
                 userId = request.userId,
-                isValid = userExists
+                isValid = userExists,
+                userName = userName
             };
 
             // Отправка ответа в Kafka

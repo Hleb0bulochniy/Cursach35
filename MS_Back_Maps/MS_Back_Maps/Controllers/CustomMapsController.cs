@@ -95,6 +95,22 @@ namespace MS_Back_Maps.Controllers
                     logModel.errorCode = "400";
                     return NotFound(logModel.message);
                 }
+                string requestId = Guid.NewGuid().ToString();
+                UserIdCheckModel userIdCheckModel = new UserIdCheckModel
+                {
+                    requestId = requestId,
+                    userId = customMap.CreatorId
+                };
+
+                UserIdCheckEventAsync(userIdCheckModel);
+                var response = await _producerService.WaitForKafkaResponseAsync(requestId, "UserIdCheckResponce", TimeSpan.FromSeconds(10));
+                if (response == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Map creator does not exist";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                }
 
                 CustomMapData customMapData = new CustomMapData
                 {
@@ -104,7 +120,7 @@ namespace MS_Back_Maps.Controllers
                     mapSize = customMap.MapSize,
                     mapType = (CustomMapType)customMap.MapType,
                     creatorId = customMap.CreatorId,
-                    //creatorName = customMap.//тут будет межсервисное взаимодействие
+                    creatorName = response.userName,
                     creationDate = customMap.CreationDate,
                     ratingSum = customMap.RatingSum,
                     ratingCount = customMap.RatingCount,
@@ -207,13 +223,13 @@ namespace MS_Back_Maps.Controllers
 
         private async Task LogEventAsync(LogModel logModel)
         {
-            var message = JsonSerializer.Serialize(logModel);
+            string message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
         }
 
         private async Task UserIdCheckEventAsync(UserIdCheckModel userIdCheckModel)
         {
-            var message = JsonSerializer.Serialize(userIdCheckModel);
+            string message = JsonSerializer.Serialize(userIdCheckModel);
             await _producerService.ProduceAsync("UserIdCheckRequest", message);
         }
 

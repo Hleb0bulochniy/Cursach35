@@ -206,9 +206,12 @@ namespace MS_Back_Auth.Controllers
 
         [Route("UserIdCheck/{idModel:int}")]
         [HttpGet]
-        public async Task<bool> UserIdCheck(int idModel)
+        public async Task<(bool, string)> UserIdCheck(int idModel)
         {
-            return await _context.Users.AnyAsync(u => u.Id == idModel);
+            bool isValid = false;
+            string userName = _context.Users.FirstOrDefault(u => u.Id == idModel).Username;
+            if (!userName.IsNullOrEmpty()) isValid = true;
+            return (isValid, userName);
         }
 
         private TokenResponceClass CreateJWT(string userName, string userId)

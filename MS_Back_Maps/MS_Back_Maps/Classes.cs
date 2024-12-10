@@ -98,5 +98,6 @@
         public string requestId { get; set; }
         public int userId { get; set; }
         public bool isValid { get; set; }
+        public string userName { get; set; }
     }
 }
