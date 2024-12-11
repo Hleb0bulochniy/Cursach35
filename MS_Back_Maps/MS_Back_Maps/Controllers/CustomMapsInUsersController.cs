@@ -12,6 +12,7 @@ using System.Text.Json;
 namespace MS_Back_Maps.Controllers
 {
     [ApiController]
+    [Route("CustomMapsInUsers")]
     public class CustomMapsInUsersController : ControllerBase
     {
         private readonly HelpFuncs _helpfuncs;

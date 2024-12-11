@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MS_Back_Logs</name>
+    </assembly>
+    <members>
+        <member name="M:MS_Back_Logs.Controllers.LogsController.LogPost(System.String)">
+            <summary>
+            Logs info.
+            </summary>
+            <response code="200">Info was logged. Returns message about completion</response>
+            <response code="400">Received data is null, other error (watch Logs). Returns message about error</response>
+        </member>
+        <member name="T:MS_Back_Logs.Migrations.First_migration">
+            <inheritdoc />
+        </member>
+        <member name="M:MS_Back_Logs.Migrations.First_migration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:MS_Back_Logs.Migrations.First_migration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:MS_Back_Logs.Migrations.First_migration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

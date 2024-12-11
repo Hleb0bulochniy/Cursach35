@@ -193,3 +193,5 @@ C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Logs\MS_Back_L
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Logs\MS_Back_Logs\obj\Debug\net8.0\MS_Back_Logs.pdb
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Logs\MS_Back_Logs\obj\Debug\net8.0\MS_Back_Logs.genruntimeconfig.cache
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Logs\MS_Back_Logs\obj\Debug\net8.0\ref\MS_Back_Logs.dll
+C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Logs\MS_Back_Logs\bin\Debug\net8.0\MS_Back_Logs.xml
+C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Logs\MS_Back_Logs\obj\Debug\net8.0\MS_Back_Logs.xml

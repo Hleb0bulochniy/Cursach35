@@ -11,6 +11,8 @@ using System.Text.Json;
 namespace MS_Back_Maps.Controllers
 {
     [ApiController]
+    [Route("CustomMaps")]
+
     public class CustomMapsController : ControllerBase
     {
         private readonly HelpFuncs _helpfuncs;
@@ -28,7 +30,7 @@ namespace MS_Back_Maps.Controllers
         /// Add new custom map in db.
         /// </summary>
         /// <response code="200">Map was added. Returns message about completion</response>
-        /// <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
+        /// <response code="400">User ID (from token) conversion in int failed, received data is null, this map already exists, other error (watch Logs). Returns message about error</response>
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found. Returns message about error</response>
         [Route("CustomMap")]
@@ -54,6 +56,16 @@ namespace MS_Back_Maps.Controllers
                 string requestId = Guid.NewGuid().ToString();
                 logModel = await UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
+
+                CustomMap? mapCheck = _context.CustomMaps.FirstOrDefault(u => u.MapName == customMapData.mapName && u.CreatorId == customMapData.creatorId);
+                if (mapCheck != null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "This map already exists";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
 
                 MapsContext context = new MapsContext();
                 if (customMapData == null)

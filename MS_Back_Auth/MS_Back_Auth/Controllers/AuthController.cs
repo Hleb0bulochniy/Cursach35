@@ -42,6 +42,7 @@ namespace MS_Back_Auth.Controllers
     }
 
     [ApiController]
+    [Route("Auth")]
     public class AuthController : ControllerBase
     {
         private readonly HelpFuncs _helpfuncs;
@@ -330,8 +331,8 @@ namespace MS_Back_Auth.Controllers
             claims: claims,
             expires: DateTime.UtcNow.Add(TimeSpan.FromHours(300)),
             signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            var encodedJwtr = new JwtSecurityTokenHandler().WriteToken(jwt);
-
+            var encodedJwtr = new JwtSecurityTokenHandler().WriteToken(jwtr);
+            if (encodedJwt == encodedJwtr) Console.WriteLine("Токены равны");
             TokenResponceClass response = new TokenResponceClass
             {
                 access_token = encodedJwt,

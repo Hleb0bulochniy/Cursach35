@@ -9,7 +9,7 @@
             Add new custom map in db.
             </summary>
             <response code="200">Map was added. Returns message about completion</response>
-            <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
+            <response code="400">User ID (from token) conversion in int failed, received data is null, this map already exists, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found. Returns message about error</response>
         </member>
@@ -18,9 +18,8 @@
             Get data of custom map from db.
             </summary>
             <response code="200">Map was found and sent. Returns json with custom map data</response>
-            <response code="400">User ID (from token) conversion in int failed, recieved id is less than 0, other error (watch Logs). Returns message about error</response>
-            <response code="401">Invalid or missing token. Returns message about error</response>
-            <response code="404">User wasn't found, map wasn't found, map creator wasn't found. Returns message about error</response>
+            <response code="400">Recieved data is wrong, other error (watch Logs). Returns message about error</response>
+            <response code="404">Map wasn't found, map creator wasn't found. Returns message about error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsController.CustomMapDelete(System.Nullable{System.Int32})">
             <summary>
