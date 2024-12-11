@@ -54,6 +54,8 @@ namespace MS_Back_Maps
                         if (consumeResult != null)
                         {
                             var message = JsonSerializer.Deserialize<UserIdCheckModel>(consumeResult.Message.Value);
+                            Console.WriteLine(consumeResult.Message.Value);
+                            Console.WriteLine(requestId);
                             if (message?.requestId == requestId)
                             {
                                 tcs.SetResult(message);
@@ -62,13 +64,14 @@ namespace MS_Back_Maps
                         }
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException a)
                 {
+                    Console.WriteLine(a.Message );
                     tcs.TrySetResult(null);
                 }
                 finally
                 {
-                    consumer.Close();
+                    //consumer.Close();
                 }
             }, cts.Token);
 

@@ -194,7 +194,7 @@ namespace MS_Back_Maps.Controllers
                     await LogEventAsync(logModel);
                     return NotFound(logModel.message);
                 }
-                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == customMapData.mapID) && (cmap.CreatorId == parsedUserId)));
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.MapName == customMapData.mapName) && (cmap.CreatorId == parsedUserId))); //стоит ли тут делать поиск по имени карты или id
                 if (customMap == null)
                 {
                     logModel.logLevel = "Error";
@@ -207,7 +207,8 @@ namespace MS_Back_Maps.Controllers
                 customMap.BombCount = customMapData.bombCount;
                 customMap.MapSize = customMapData.mapSize;
                 customMap.MapType = (int)customMapData.mapType;
-                customMap.Downloads = customMapData.downloads;
+                //customMap.Downloads = customMapData.downloads;
+                customMap.About = customMapData.about;
 
                 await _context.SaveChangesAsync();
                 return Ok(logModel.message);
@@ -320,9 +321,9 @@ namespace MS_Back_Maps.Controllers
 
         private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
         {
-            logModel.eventType = "Error";
+            logModel.logLevel = "Error";
             logModel.message = "Server error";
-            logModel.details = ex.Message;
+            logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
             logModel.errorCode = "500";
             await LogEventAsync(logModel);
             return logModel;

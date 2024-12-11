@@ -47,7 +47,7 @@ namespace MS_Back_Maps.Controllers
                     await LogEventAsync(logModel);
                     return NotFound(logModel.message);
                 }
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) && (map.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(map => (map.CustomMapId == mapSaveModel.mapId) && (map.UserId == parsedUserId));
 
                 if (customMapsInUser == null)
                 {
@@ -119,7 +119,7 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.CustomMapId == idModel) && (cmap.UserId == parsedUserId));
                 var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -178,7 +178,7 @@ namespace MS_Back_Maps.Controllers
 
                 foreach (MapSaveModel mapSaveModel in mapSaveListModel.mapSaveList) //извлекать данные в списке с помощью linq
                 {
-                    CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) && (map.UserId == parsedUserId));
+                    CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(map => (map.CustomMapId == mapSaveModel.mapId) && (map.UserId == parsedUserId));
 
                     if (customMapsInUser == null) //переделать логику логирования, чтоб для каждой карты был свой лог
                     {
@@ -289,7 +289,7 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == rateMap.mapId) && (cmap.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.CustomMapId == rateMap.mapId) && (cmap.UserId == parsedUserId));
                 var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -337,7 +337,7 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == rateMap.mapId) && (cmap.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.CustomMapId == rateMap.mapId) && (cmap.UserId == parsedUserId));
                 var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -385,7 +385,7 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.CustomMapId == idModel) && (cmap.UserId == parsedUserId));
                 var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -399,6 +399,7 @@ namespace MS_Back_Maps.Controllers
                 }
 
                 customMap.RatingSum -= customMapsInUser.Rate;
+                customMap.RatingCount -= 1;
                 customMapsInUser.Rate = 0;
 
                 await _context.SaveChangesAsync();
@@ -432,11 +433,15 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.CustomMapId == idmodel.id) && (cmap.UserId == parsedUserId));
                 if (customMapsInUser != null)
                 {
+                    if (customMapsInUser.IsAdded == false)
+                    {
+                        customMap.Downloads += 1;
+                        customMapsInUser.IsAdded = true;
+                    }//сделать обработчик с ошибкой если карта уже добавлена
                     //тут шляпа какая-то
-                    customMap.Downloads += 1;
                     //return NotFound(logModel.message);
                 }
                 else
@@ -496,7 +501,7 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.CustomMapId == idModel) && (cmap.UserId == parsedUserId));
                 var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -537,7 +542,7 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.CustomMapId == idmodel.id) && (cmap.UserId == parsedUserId));
                 var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -575,7 +580,7 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await CustomMapNullCheck(customMap, logModel);
                 if (!success2) return result2!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.Id == idmodel.id) && (cmap.UserId == parsedUserId));
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => (cmap.CustomMapId == idmodel.id) && (cmap.UserId == parsedUserId));
                 var (success3, result3) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -709,9 +714,9 @@ namespace MS_Back_Maps.Controllers
 
         private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
         {
-            logModel.eventType = "Error";
+            logModel.logLevel = "Error";
             logModel.message = "Server error";
-            logModel.details = ex.Message;
+            logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
             logModel.errorCode = "500";
             await LogEventAsync(logModel);
             return logModel;

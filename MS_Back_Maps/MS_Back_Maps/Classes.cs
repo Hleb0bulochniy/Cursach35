@@ -72,6 +72,7 @@
         public string lastGameData { get; set; }
         public int lastGameTime { get; set; }
     }
+    [Serializable]
     public class MapSaveListModel
     {
         public List<MapSaveModel> mapSaveList { get; set; } = new List<MapSaveModel>();

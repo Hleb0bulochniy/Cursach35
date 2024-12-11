@@ -36,11 +36,11 @@ namespace MS_Back_Maps.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-
+                Console.WriteLine("1");
                 string requestId = Guid.NewGuid().ToString();
                 logModel = await UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "400") return BadRequest(logModel.message);
-
+                Console.WriteLine("2");
                 if (mapSaveModel == null)
                 {
                     logModel.logLevel = "Error";
@@ -49,8 +49,8 @@ namespace MS_Back_Maps.Controllers
                     await LogEventAsync(logModel);
                     return NotFound(logModel.message);
                 }
-                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) && (map.UserId == parsedUserId));
-
+                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.MapId == mapSaveModel.mapId) && (map.UserId == parsedUserId));
+                Console.WriteLine("3");
                 if (mapsInUser == null)
                 {
                     logModel.message = "Progress was added";
@@ -71,10 +71,12 @@ namespace MS_Back_Maps.Controllers
                         LastGameData = mapSaveModel.lastGameData,
                         LastGameTime = mapSaveModel.lastGameTime
                     };
+                    Console.WriteLine("добавляется новая карта");
                     await _context.MapsInUsers.AddAsync(mapsInUserInput);
                 }
                 else
                 {
+                    Console.WriteLine("меняются данные старой карты");
                     mapsInUser.MapId = mapSaveModel.mapId;
                     mapsInUser.GamesSum = mapSaveModel.gamesSum;
                     mapsInUser.Wins = mapSaveModel.wins;
@@ -89,13 +91,14 @@ namespace MS_Back_Maps.Controllers
                     mapsInUser.LastGameData = mapSaveModel.lastGameData;
                     mapsInUser.LastGameTime = mapSaveModel.lastGameTime;
                 }
-
+                Console.WriteLine("4");
                 await _context.SaveChangesAsync();
                 await LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.InnerException);
                 LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
@@ -121,7 +124,7 @@ namespace MS_Back_Maps.Controllers
                 var (success2, result2) = await MapNullCheck(map, logModel);
                 if (!success2) return result2!;
 
-                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.Id == idModel) && (map.UserId == parsedUserId));
+                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.MapId == idModel) && (map.UserId == parsedUserId));
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -180,7 +183,7 @@ namespace MS_Back_Maps.Controllers
 
                 foreach ( MapSaveModel mapSaveModel in mapSaveListModel.mapSaveList ) //извлекать данные в списке с помощью linq
                 {
-                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.Id == mapSaveModel.id) && (map.UserId == parsedUserId));
+                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.MapId == mapSaveModel.mapId) && (map.UserId == parsedUserId));
 
                     if (mapsInUser == null) //переделать логику логирования, чтоб для каждой карты был свой лог
                     {
@@ -252,6 +255,11 @@ namespace MS_Back_Maps.Controllers
                 List<MapsInUser> maps = _context.MapsInUsers
                                    .Where(map => map.UserId == parsedUserId)
                                    .ToList();
+                /*foreach (var map in maps)
+                {
+                    Map? mapData = _context.Maps.FirstOrDefault(mapD => (mapD.Id == map.MapId));
+                    map.Map = mapData.MapName;
+                }*/
                 if (!maps.Any())
                 {
                     logModel.logLevel = "Error";
@@ -371,9 +379,9 @@ namespace MS_Back_Maps.Controllers
 
         private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
         {
-            logModel.eventType = "Error";
+            logModel.logLevel = "Error";
             logModel.message = "Server error";
-            logModel.details = ex.Message;
+            logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
             logModel.errorCode = "500";
             await LogEventAsync(logModel);
             return logModel;

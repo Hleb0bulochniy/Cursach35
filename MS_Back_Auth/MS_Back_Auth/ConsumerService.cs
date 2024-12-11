@@ -37,19 +37,20 @@ namespace MS_Back_Auth
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _consumer.Subscribe("UserIdCheckRequest");
-
+            Console.WriteLine("lbl");
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
-            {
-                var consumeResult = _consumer.Consume(stoppingToken);
+                {
+                    Console.WriteLine("lb1l");
+                    var consumeResult = _consumer.Consume(stoppingToken);
 
-                await ProcessMessageAsync(consumeResult.Message.Value);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error processing Kafka message: {ex.Message}");
-            }
+                    await ProcessMessageAsync(consumeResult.Message.Value);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing Kafka message: {ex.Message}");
+                }
             }
 
             _consumer.Close();
@@ -57,6 +58,7 @@ namespace MS_Back_Auth
 
         private async Task ProcessMessageAsync(string message)
         {
+            Console.WriteLine("qwertyuiop");
             var request = JsonSerializer.Deserialize<UserIdCheckModel>(message);
             if (request == null) return;
 

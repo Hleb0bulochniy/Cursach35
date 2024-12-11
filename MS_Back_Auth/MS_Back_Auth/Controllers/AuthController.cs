@@ -73,6 +73,7 @@ namespace MS_Back_Auth.Controllers
                         };
                         await _context.Users.AddAsync(user);
                         await _context.SaveChangesAsync();
+                        logModel.userId = user.Id;
                         await LogEventAsync(logModel);
                         return Ok(logModel.message);
                     }
@@ -80,6 +81,7 @@ namespace MS_Back_Auth.Controllers
                     {
                         logModel.logLevel = "Error";
                         logModel.message = "The user already exists";
+                        logModel.details = $"userName: {registrationClass.userName}, EMail: {registrationClass.email}";
                         logModel.errorCode = "400";
                         await LogEventAsync(logModel);
                         return BadRequest(logModel.message);
@@ -89,6 +91,7 @@ namespace MS_Back_Auth.Controllers
                 {
                     logModel.logLevel = "Error";
                     logModel.message = "Passwords don't match";
+                    logModel.details = $"userName: {registrationClass.userName}, EMail: {registrationClass.email}";
                     logModel.errorCode = "400";
                     await LogEventAsync(logModel);
                     return BadRequest(logModel.message);
@@ -109,12 +112,14 @@ namespace MS_Back_Auth.Controllers
             try
             {
                 string cryptedPassword = Cryptography.ConvertPassword(model.password);
-                User? dbuser = _context.Users.FirstOrDefault(u => u.Username == model.userName); //переделать если пароль не совпадает
+                User? dbuser = _context.Users.FirstOrDefault(u => u.Username == model.userName);
+                logModel.userId = dbuser == null? -1 : dbuser.Id;
                 if (dbuser == null)
                 {
                     logModel.logLevel = "Error";
                     logModel.message = "There is no user with this login";
                     logModel.errorCode = "401";
+                    logModel.details = $"User: {model.userName}";
                     await LogEventAsync(logModel);
                     return Unauthorized(logModel.message);
                 }
@@ -151,7 +156,6 @@ namespace MS_Back_Auth.Controllers
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
                 string userName = _context.Users.FirstOrDefault(u => u.Id == parsedUserId).Username; //стоит ли это оставлять так или лучше доставать значение из токена
-
                 TokenResponceClass response = CreateJWT(userName, parsedUserId.ToString());
 
                 await LogEventAsync(logModel);
@@ -164,8 +168,8 @@ namespace MS_Back_Auth.Controllers
             }
         }
 
-        [Authorize]
         [Route("PasswordCheck")]
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> PasswordCheck([FromBody] PasswordClass password)
         {
@@ -195,6 +199,7 @@ namespace MS_Back_Auth.Controllers
                     await LogEventAsync(logModel);
                     return Unauthorized(logModel.message);
                 }
+                await LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
@@ -206,11 +211,18 @@ namespace MS_Back_Auth.Controllers
 
         [Route("UserIdCheck/{idModel:int}")]
         [HttpGet]
-        public async Task<(bool, string)> UserIdCheck(int idModel)
+        public async Task<(bool, string)> UserIdCheck(int idModel) //стоит ли это логировать
         {
             bool isValid = false;
-            string userName = _context.Users.FirstOrDefault(u => u.Id == idModel).Username;
-            if (!userName.IsNullOrEmpty()) isValid = true;
+            Console.WriteLine("133");
+            User? user = _context.Users.FirstOrDefault(u => u.Id == idModel);
+            string userName = "";
+
+            if (user != null)
+            {
+                isValid = true;
+                userName = user.Username;
+            }
             return (isValid, userName);
         }
 
@@ -294,9 +306,9 @@ namespace MS_Back_Auth.Controllers
 
         private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
         {
-            logModel.eventType = "Error";
+            logModel.logLevel = "Error";
             logModel.message = "Server error";
-            logModel.details = ex.Message;
+            logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
             logModel.errorCode = "500";
             await LogEventAsync(logModel);
             return logModel;

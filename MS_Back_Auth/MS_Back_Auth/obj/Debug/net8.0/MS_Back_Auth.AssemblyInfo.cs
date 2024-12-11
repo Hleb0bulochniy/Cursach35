@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MS_Back_Auth")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+050848b68ad5400899ca6fcd9453d729b1f789af")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4bfd9c2999c555097a9973e33e8eca44a64aedb3")]
 [assembly: System.Reflection.AssemblyProductAttribute("MS_Back_Auth")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MS_Back_Auth")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
