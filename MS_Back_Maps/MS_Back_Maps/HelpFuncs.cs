@@ -33,6 +33,11 @@ namespace MS_Back_Maps
             string message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
         }
+        public async Task UserIdCheckEventAsync(UserIdCheckModel userIdCheckModel)
+        {
+            var message = JsonSerializer.Serialize(userIdCheckModel);
+            await _producerService.ProduceAsync("UserIdCheckRequest", message);
+        }
 
         public async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
         {
@@ -44,11 +49,6 @@ namespace MS_Back_Maps
             return logModel;
         }
 
-        public async Task UserIdCheckEventAsync(UserIdCheckModel userIdCheckModel)
-        {
-            var message = JsonSerializer.Serialize(userIdCheckModel);
-            await _producerService.ProduceAsync("UserIdCheckRequest", message);
-        }
 
         public async Task<LogModel> UserIdCheck(string requestId, int parsedUserId, LogModel logModel)
         {

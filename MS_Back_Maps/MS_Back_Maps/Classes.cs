@@ -42,11 +42,6 @@
         }
     }
     [Serializable]
-    public class IdModel
-    {
-        public int id { get; set; }
-    }
-    [Serializable]
     public class RateMap
     {
         public int mapId { get; set; }

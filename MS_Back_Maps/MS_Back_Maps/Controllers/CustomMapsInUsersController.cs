@@ -641,7 +641,7 @@ namespace MS_Back_Maps.Controllers
                 if (!success3) return result3!;
 
 
-                customMap.Downloads -= 1;
+                //customMap.Downloads -= 1;
                 customMapsInUser.IsAdded = false;
 
                 await _context.SaveChangesAsync();
