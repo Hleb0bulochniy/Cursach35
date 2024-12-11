@@ -19,6 +19,12 @@ namespace MS_Back_Logs.Controllers
         {
             _context = logsContext;
         }
+
+        /// <summary>
+        /// Logs info.
+        /// </summary>
+        /// <response code="200">Info was logged. Returns message about completion</response>
+        /// <response code="400">Received data is null, other error (watch Logs). Returns message about error</response>
         [Route("Log")]
         //[Authorize] //сделать роль админа
         [HttpPost]
@@ -33,7 +39,7 @@ namespace MS_Back_Logs.Controllers
                     return BadRequest("The log data is empty");
                 }
 
-                Log log = new Log //для каждого поставить значение в случае null
+                Log log = new Log
                 {
                     UserId = logData.userId,
                     DateTime = logData.dateTime,
@@ -49,8 +55,20 @@ namespace MS_Back_Logs.Controllers
                 await _context.SaveChangesAsync();
                 return Ok("Log input successful");
             }
-            catch
+            catch (Exception ex)
             {
+                Log logModel = new Log
+                {
+                    UserId = -1,
+                    DateTime = DateTime.UtcNow,
+                    ServiceName = "LogsController",
+                    LogLevel = "Error",
+                    EventType = "LogPost",
+                    Message = "Swever error",
+                    Details = ex.InnerException.Message,
+                    ErrorCode = "400"
+                };
+                _context.Logs.Add(logModel);
                 return BadRequest("Server error");
             }
         }

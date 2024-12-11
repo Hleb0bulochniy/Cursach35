@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using MS_Back_Logs.Controllers;
 using System;
 using MS_Back_Logs.Data;
+using System.Reflection;
 
 namespace MS_Back_Logs
 {
@@ -12,12 +13,18 @@ namespace MS_Back_Logs
     {
         public static void Main(string[] args)
         {
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            //builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.IncludeXmlComments(xmlPath);
+            });
 
             builder.Services.AddAuthorization();
             builder.Services.AddSingleton<LogsController>();

@@ -25,32 +25,43 @@ namespace MS_Back_Maps.Controllers
             _producerService = producerService;
             _context = mapsContext;
         }
+
+
+        /// <summary>
+        /// Save progress of user on the map in db.
+        /// </summary>
+        /// <remarks>If there is no data aobut saves in db, this method creates it</remarks>
+        /// <response code="200">Progress was saved. Returns message about completion</response>
+        /// <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token. Returns message about error</response>
+        /// <response code="404">User wasn't found. Returns message about error</response>
         [Route("Progress")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> ProgressPost([FromBody] MapSaveModel mapSaveModel)
+        public async Task<IActionResult> ProgressPost([FromBody] MapSaveModel? mapSaveModel)
         {
             LogModel logModel = LogModelCreate("ProgressPost", "Progress was pasted");
             try
             {
-                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
-                if (!success) return result!;
-                logModel.userId = parsedUserId;
-                Console.WriteLine("1");
-                string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
-                if (logModel.errorCode == "400") return BadRequest(logModel.message);
-                Console.WriteLine("2");
                 if (mapSaveModel == null)
                 {
                     logModel.logLevel = "Error";
-                    logModel.message = "MapSaveModel is empty";
-                    logModel.errorCode = "404";
+                    logModel.message = "Received data is null";
+                    logModel.errorCode = "400";
                     await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
+                    return BadRequest(logModel.message);
                 }
+
+                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
+                if (!success) return result!;
+                logModel.userId = parsedUserId;
+
+                string requestId = Guid.NewGuid().ToString();
+                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                if (logModel.errorCode == "404") return NotFound(logModel.message);
+
                 MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.MapId == mapSaveModel.mapId) && (map.UserId == parsedUserId));
-                Console.WriteLine("3");
+
                 if (mapsInUser == null)
                 {
                     logModel.message = "Progress was added";
@@ -71,12 +82,10 @@ namespace MS_Back_Maps.Controllers
                         LastGameData = mapSaveModel.lastGameData,
                         LastGameTime = mapSaveModel.lastGameTime
                     };
-                    Console.WriteLine("добавляется новая карта");
                     await _context.MapsInUsers.AddAsync(mapsInUserInput);
                 }
                 else
                 {
-                    Console.WriteLine("меняются данные старой карты");
                     mapsInUser.MapId = mapSaveModel.mapId;
                     mapsInUser.GamesSum = mapSaveModel.gamesSum;
                     mapsInUser.Wins = mapSaveModel.wins;
@@ -91,7 +100,7 @@ namespace MS_Back_Maps.Controllers
                     mapsInUser.LastGameData = mapSaveModel.lastGameData;
                     mapsInUser.LastGameTime = mapSaveModel.lastGameTime;
                 }
-                Console.WriteLine("4");
+
                 await _context.SaveChangesAsync();
                 await LogEventAsync(logModel);
                 return Ok(logModel.message);
@@ -104,21 +113,37 @@ namespace MS_Back_Maps.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Get progress of user on the map.
+        /// </summary>
+        /// <response code="200">Progress was sent. Returns json with progress</response>
+        /// <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token. Returns message about error</response>
+        /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
         [Route("Progress/{idModel:int}")]
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> ProgressGet(int idModel)
+        public async Task<IActionResult> ProgressGet(int? idModel)
         {
             LogModel logModel = LogModelCreate("ProgressGet", "Progress was gotten");
             try
             {
+                if (idModel <= 0 || idModel == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Received data is wrong";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
                 logModel = await UserIdCheck(requestId, parsedUserId, logModel);
-                if (logModel.errorCode == "400") return BadRequest(logModel.message);
+                if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 Map? map = _context.Maps.FirstOrDefault(map => ((map.Id == idModel)));
                 var (success2, result2) = await MapNullCheck(map, logModel);
@@ -156,6 +181,15 @@ namespace MS_Back_Maps.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Save progress of user on several maps in db.
+        /// </summary>
+        /// <remarks>If there is no data aobut saves in db, this method creates it</remarks>
+        /// <response code="200">Progress was saved. Returns message about completion</response>
+        /// <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token. Returns message about error</response>
+        /// <response code="404">User wasn't found. Returns message about error</response>
         [Route("SaveList")]
         [Authorize]
         [HttpPost]
@@ -164,31 +198,30 @@ namespace MS_Back_Maps.Controllers
             LogModel logModel = LogModelCreate("SaveListPost", "Save list was posted");
             try
             {
+                if (mapSaveListModel.mapSaveList == null || !mapSaveListModel.mapSaveList.Any() || mapSaveListModel == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Received data is wrong";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
+
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
                 logModel = await UserIdCheck(requestId, parsedUserId, logModel);
-                if (logModel.errorCode == "400") return BadRequest(logModel.message);
+                if (logModel.errorCode == "404") return NotFound(logModel.message);
 
-                if (mapSaveListModel.mapSaveList == null || !mapSaveListModel.mapSaveList.Any())
+                var existingMaps = _context.MapsInUsers.Where(map => map.UserId == parsedUserId && mapSaveListModel.mapSaveList.Select(m => m.mapId).Contains(map.MapId)).ToDictionary(map => map.MapId);
+                List<MapsInUser> mapsToAdd = new List<MapsInUser>();
+                foreach ( MapSaveModel mapSaveModel in mapSaveListModel.mapSaveList )
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The list in body is empty";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
-
-                foreach ( MapSaveModel mapSaveModel in mapSaveListModel.mapSaveList ) //извлекать данные в списке с помощью linq
-                {
-                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.MapId == mapSaveModel.mapId) && (map.UserId == parsedUserId));
-
-                    if (mapsInUser == null) //переделать логику логирования, чтоб для каждой карты был свой лог
+                    if (!existingMaps.TryGetValue(mapSaveModel.mapId, out var mapsInUser))
                     {
-                        logModel.message = "Save list was added";
-                        MapsInUser mapsInUserInput = new MapsInUser
+                        mapsToAdd.Add(new MapsInUser
                         {
                             MapId = mapSaveModel.mapId,
                             UserId = logModel.userId = parsedUserId,
@@ -204,8 +237,8 @@ namespace MS_Back_Maps.Controllers
                             AverageTime = mapSaveModel.timeSpentSum > 0 ? mapSaveModel.wins / mapSaveModel.timeSpentSum : 0,
                             LastGameData = mapSaveModel.lastGameData,
                             LastGameTime = mapSaveModel.lastGameTime
-                        };
-                        await _context.MapsInUsers.AddAsync(mapsInUserInput);
+                        });
+                        logModel.details += $"\n!ADD! Custom map id: {mapSaveModel.mapId}, user id: {parsedUserId};";
                     }
                     else
                     {
@@ -222,7 +255,12 @@ namespace MS_Back_Maps.Controllers
                         mapsInUser.AverageTime = mapSaveModel.timeSpentSum > 0 ? mapSaveModel.wins / mapSaveModel.timeSpentSum : 0;
                         mapsInUser.LastGameData = mapSaveModel.lastGameData;
                         mapsInUser.LastGameTime = mapSaveModel.lastGameTime;
+                        logModel.details += $"\n!CHANGE! Custom map id: {mapsInUser.MapId}, user id: {mapsInUser.UserId}, id: {mapsInUser.Id};";
                     }
+                }
+                if (mapsToAdd.Any())
+                {
+                    await _context.MapsInUsers.AddRangeAsync(mapsToAdd);
                 }
 
                 await _context.SaveChangesAsync();
@@ -236,6 +274,14 @@ namespace MS_Back_Maps.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Get progress of user on all maps.
+        /// </summary>
+        /// <response code="200">Progress was sent. Returns json with progress</response>
+        /// <response code="400">User ID (from token) conversion in int failed, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token. Returns message about error</response>
+        /// <response code="404">User wasn't found, user's map saves weren't found. Returns message about error</response>
         [Route("SaveList")]
         [Authorize]
         [HttpGet]
@@ -250,16 +296,11 @@ namespace MS_Back_Maps.Controllers
 
                 string requestId = Guid.NewGuid().ToString();
                 logModel = await UserIdCheck(requestId, parsedUserId, logModel);
-                if (logModel.errorCode == "400") return BadRequest(logModel.message);
+                if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 List<MapsInUser> maps = _context.MapsInUsers
                                    .Where(map => map.UserId == parsedUserId)
                                    .ToList();
-                /*foreach (var map in maps)
-                {
-                    Map? mapData = _context.Maps.FirstOrDefault(mapD => (mapD.Id == map.MapId));
-                    map.Map = mapData.MapName;
-                }*/
                 if (!maps.Any())
                 {
                     logModel.logLevel = "Error";
@@ -306,7 +347,7 @@ namespace MS_Back_Maps.Controllers
             {
                 logModel.logLevel = "Error";
                 logModel.message = "User does not exist";
-                logModel.errorCode = "400";
+                logModel.errorCode = "404";
                 await LogEventAsync(logModel);
             }
             return logModel;
@@ -343,7 +384,7 @@ namespace MS_Back_Maps.Controllers
             {
                 logModel.logLevel = "Error";
                 logModel.message = "User ID conversion in int failed";
-                logModel.errorCode = "500";
+                logModel.errorCode = "400";
                 await LogEventAsync(logModel);
                 return (false, BadRequest(logModel.message), -1);
             }
@@ -382,7 +423,7 @@ namespace MS_Back_Maps.Controllers
             logModel.logLevel = "Error";
             logModel.message = "Server error";
             logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
-            logModel.errorCode = "500";
+            logModel.errorCode = "400";
             await LogEventAsync(logModel);
             return logModel;
         }

@@ -362,3 +362,5 @@ C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Auth\MS_Back_A
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Auth\MS_Back_Auth\obj\Debug\net8.0\MS_Back_Auth.pdb
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Auth\MS_Back_Auth\obj\Debug\net8.0\MS_Back_Auth.genruntimeconfig.cache
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Auth\MS_Back_Auth\obj\Debug\net8.0\ref\MS_Back_Auth.dll
+C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Auth\MS_Back_Auth\bin\Debug\net8.0\MS_Back_Auth.xml
+C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Auth\MS_Back_Auth\obj\Debug\net8.0\MS_Back_Auth.xml

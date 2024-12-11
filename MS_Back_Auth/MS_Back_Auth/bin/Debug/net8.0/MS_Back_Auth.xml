@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MS_Back_Auth</name>
+    </assembly>
+    <members>
+        <member name="M:MS_Back_Auth.Controllers.AuthController.UserRegistrationPost(MS_Back_Auth.RegistrationClass)">
+            <summary>
+            Registrate a user.
+            </summary>
+            <response code="200">Registration successful. Returns json with progress</response>
+            <response code="400">The user already exists, received data is null, passwords don't match, other error (watch Logs). Returns message about error</response>
+        </member>
+        <member name="M:MS_Back_Auth.Controllers.AuthController.UserLoginPost(MS_Back_Auth.LoginClass)">
+            <summary>
+            Login user.
+            </summary>
+            <response code="200">Login succwssful. Returns json with jwt tokens and userName</response>
+            <response code="400">The user already exists, received data is null, passwords don't match, other error (watch Logs). Returns message about error</response>
+            <response code="401">There is no user with this login, the password doesn't match. Returns message about error</response>
+        </member>
+        <member name="M:MS_Back_Auth.Controllers.AuthController.RefreshTokenGet">
+            <summary>
+            Get new tokens.
+            </summary>
+            <response code="200">Token change successful. Returns json with jwt tokens and userName</response>
+            <response code="400">User ID (from token) conversion in int failed, other error (watch Logs). Returns message about error</response>
+            <response code="401">Invalid or missing token. Returns message about error</response>
+            <response code="404">The user wasn't found. Returns message about error</response>
+        </member>
+        <member name="M:MS_Back_Auth.Controllers.AuthController.PasswordCheck(MS_Back_Auth.PasswordClass)">
+            <summary>
+            Check if password correct.
+            </summary>
+            <response code="200">Password correct. Returns message about completion</response>
+            <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
+            <response code="401">Invalid or missing token, the password doesn't match. Returns message about error</response>
+            <response code="404">The user wasn't found. Returns message about error</response>
+        </member>
+        <member name="M:MS_Back_Auth.Controllers.AuthController.UserIdCheck(System.Nullable{System.Int32})">
+            <summary>
+            Check if user exists.
+            </summary>
+            <remarks>If user exists, it sends confirmation and his username. If user doesn't exists or recieved data is wrong, it sends denial</remarks>
+        </member>
+        <member name="T:MS_Back_Auth.Migrations.First_migration">
+            <inheritdoc />
+        </member>
+        <member name="M:MS_Back_Auth.Migrations.First_migration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:MS_Back_Auth.Migrations.First_migration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:MS_Back_Auth.Migrations.First_migration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

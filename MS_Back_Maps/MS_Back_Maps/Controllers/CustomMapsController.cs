@@ -22,21 +22,38 @@ namespace MS_Back_Maps.Controllers
             _producerService = producerService;
             _context = mapsContext;
         }
+
+
+        /// <summary>
+        /// Add new custom map in db.
+        /// </summary>
+        /// <response code="200">Map was added. Returns message about completion</response>
+        /// <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token. Returns message about error</response>
+        /// <response code="404">User wasn't found. Returns message about error</response>
         [Route("CustomMap")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CustomMapPost([FromBody] CustomMapData customMapData)
+        public async Task<IActionResult> CustomMapPost([FromBody] CustomMapData? customMapData)
         {
             LogModel logModel = LogModelCreate("CustomMapPost", "Custom map was added");
             try
             {
+                if (customMapData == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Received data is null";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
                 logModel = await UserIdCheck(requestId, parsedUserId, logModel);
-                if (logModel.errorCode == "400") return BadRequest(logModel.message);
+                if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 MapsContext context = new MapsContext();
                 if (customMapData == null)
@@ -72,17 +89,25 @@ namespace MS_Back_Maps.Controllers
                 return BadRequest(updatedLogModel.message);
             }
         }
+
+
+        /// <summary>
+        /// Get data of custom map from db.
+        /// </summary>
+        /// <response code="200">Map was found and sent. Returns json with custom map data</response>
+        /// <response code="400">Recieved data is wrong, other error (watch Logs). Returns message about error</response>
+        /// <response code="404">Map wasn't found, map creator wasn't found. Returns message about error</response>
         [Route("CustomMap/{idModel:int}")]
         [HttpGet]
-        public async Task<IActionResult> CustomMapGet(int idModel)
+        public async Task<IActionResult> CustomMapGet(int? idModel)
         {
             LogModel logModel = LogModelCreate("CustomMapGet", "Custom map gotten");
             try
             {
-                if (idModel <= 0)
+                if (idModel <= 0 || idModel == null)
                 {
                     logModel.logLevel = "Error";
-                    logModel.message = "Requested mapId is less than 0";
+                    logModel.message = "Recieved data is wrong";
                     logModel.errorCode = "400";
                     await LogEventAsync(logModel);
                     return BadRequest(logModel.message);
@@ -92,7 +117,7 @@ namespace MS_Back_Maps.Controllers
                 {
                     logModel.logLevel="Error";
                     logModel.message = "Map was not found by MapId";
-                    logModel.errorCode = "400";
+                    logModel.errorCode = "404";
                     return NotFound(logModel.message);
                 }
                 string requestId = Guid.NewGuid().ToString();
@@ -108,7 +133,7 @@ namespace MS_Back_Maps.Controllers
                 {
                     logModel.logLevel = "Error";
                     logModel.message = "Map creator does not exist";
-                    logModel.errorCode = "400";
+                    logModel.errorCode = "404";
                     await LogEventAsync(logModel);
                 }
 
@@ -136,21 +161,38 @@ namespace MS_Back_Maps.Controllers
                 return BadRequest(updatedLogModel.message);
             }
         }
+
+
+        /// <summary>
+        /// Delete data of a custom map in db.
+        /// </summary>
+        /// <response code="200">Map was found and deleted. Returns message about completion</response>
+        /// <response code="400">User ID (from token) conversion in int failed, recieved data is wrong, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token. Returns message about error</response>
+        /// <response code="404">User wasn't found, map wasn't found. Returns message about error</response>
         [Route("CustomMap/{idModel:int}")]
         [Authorize]
         [HttpDelete]
-        public async Task<IActionResult> CustomMapDelete(int idModel)
+        public async Task<IActionResult> CustomMapDelete(int? idModel)
         {
             LogModel logModel = LogModelCreate("CustomMapDelete", "Custom map deleted");
             try
             {
+                if (idModel <= 0 || idModel == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Recieved data is wrong";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
                 logModel = await UserIdCheck(requestId, parsedUserId, logModel);
-                if (logModel.errorCode == "400") return BadRequest(logModel.message);
+                if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.CreatorId == parsedUserId));
                 if (customMap == null)
@@ -170,30 +212,40 @@ namespace MS_Back_Maps.Controllers
                 return BadRequest(updatedLogModel.message);
             }
         }
+
+
+        /// <summary>
+        /// Change data of a custom map in db.
+        /// </summary>
+        /// <response code="200">Map was found and deleted. Returns message about completion</response>
+        /// <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token. Returns message about error</response>
+        /// <response code="404">User wasn't found, map wasn't found. Returns message about error</response>
         [Route("CustomMap")]
         [Authorize]
         [HttpPut]
-        public async Task<IActionResult> CustomMapPut([FromBody] CustomMapData customMapData)
+        public async Task<IActionResult> CustomMapPut([FromBody] CustomMapData? customMapData)
         {
             LogModel logModel = LogModelCreate("CustomMapPut", "Custom map putted");
             try
             {
+                if (customMapData == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Received data is null";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
+
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
                 logModel = await UserIdCheck(requestId, parsedUserId, logModel);
-                if (logModel.errorCode == "400") return BadRequest(logModel.message);
+                if (logModel.errorCode == "404") return NotFound(logModel.message);
 
-                if (customMapData == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "New data in body is null";
-                    logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.MapName == customMapData.mapName) && (cmap.CreatorId == parsedUserId))); //стоит ли тут делать поиск по имени карты или id
                 if (customMap == null)
                 {
@@ -207,7 +259,6 @@ namespace MS_Back_Maps.Controllers
                 customMap.BombCount = customMapData.bombCount;
                 customMap.MapSize = customMapData.mapSize;
                 customMap.MapType = (int)customMapData.mapType;
-                //customMap.Downloads = customMapData.downloads;
                 customMap.About = customMapData.about;
 
                 await _context.SaveChangesAsync();
@@ -248,7 +299,7 @@ namespace MS_Back_Maps.Controllers
             {
                 logModel.logLevel = "Error";
                 logModel.message = "User does not exist";
-                logModel.errorCode = "400";
+                logModel.errorCode = "404";
                 await LogEventAsync(logModel);
             }
             return logModel;
@@ -285,7 +336,7 @@ namespace MS_Back_Maps.Controllers
             {
                 logModel.logLevel = "Error";
                 logModel.message = "User ID conversion in int failed";
-                logModel.errorCode = "500";
+                logModel.errorCode = "400";
                 await LogEventAsync(logModel);
                 return (false, BadRequest(logModel.message), -1);
             }
@@ -324,7 +375,7 @@ namespace MS_Back_Maps.Controllers
             logModel.logLevel = "Error";
             logModel.message = "Server error";
             logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
-            logModel.errorCode = "500";
+            logModel.errorCode = "400";
             await LogEventAsync(logModel);
             return logModel;
         }

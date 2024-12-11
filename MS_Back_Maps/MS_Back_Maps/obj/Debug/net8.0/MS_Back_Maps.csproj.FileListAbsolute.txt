@@ -193,3 +193,5 @@ C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Maps\MS_Back_M
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Maps\MS_Back_Maps\bin\Debug\net8.0\runtimes\win-x86\native\vcruntime140.dll
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Maps\MS_Back_Maps\bin\Debug\net8.0\runtimes\win-x86\native\zlib1.dll
 C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Maps\MS_Back_Maps\bin\Debug\net8.0\runtimes\win-x86\native\zstd.dll
+C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Maps\MS_Back_Maps\bin\Debug\net8.0\MS_Back_Maps.xml
+C:\Users\sacho\OneDrive\Рабочий стол\Cursach35\MS_Back_Maps\MS_Back_Maps\obj\Debug\net8.0\MS_Back_Maps.xml

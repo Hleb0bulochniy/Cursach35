@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using MS_Back_Maps.Data;
+using System.Reflection;
 using System.Text;
 
 namespace MS_Back_Maps
@@ -10,12 +11,33 @@ namespace MS_Back_Maps
     {
         public static void Main(string[] args)
         {
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            //builder.Services.AddSwaggerGen();
+
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.IncludeXmlComments(xmlPath);
+            });
+
+            /*builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1",
+                    new Info
+                    {
+                        Title = "My API - V1",
+                        Version = "v1"
+                    }
+                 );
+
+                var filePath = Path.Combine(System.AppContext.BaseDirectory, "MyApi.xml");
+                c.IncludeXmlComments(filePath);
+            };*/
 
             builder.Services.AddAuthorization();
 
@@ -37,6 +59,7 @@ namespace MS_Back_Maps
                 };
 
             });
+
 
             var app = builder.Build();
 

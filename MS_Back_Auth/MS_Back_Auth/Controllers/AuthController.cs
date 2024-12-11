@@ -53,6 +53,13 @@ namespace MS_Back_Auth.Controllers
             _context = authContext;
             _producerService = producerService;
         }
+
+
+        /// <summary>
+        /// Registrate a user.
+        /// </summary>
+        /// <response code="200">Registration successful. Returns json with progress</response>
+        /// <response code="400">The user already exists, received data is null, passwords don't match, other error (watch Logs). Returns message about error</response>
         [Route("UserRegistration")]
         [HttpPost]
         public async Task<IActionResult> UserRegistrationPost([FromBody] RegistrationClass registrationClass)
@@ -60,6 +67,14 @@ namespace MS_Back_Auth.Controllers
             LogModel logModel = LogModelCreate("UserRegistrationPost", "Registration successful");
             try
             {
+                if (registrationClass == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Received data is null";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
                 if (registrationClass.password1 == registrationClass.password2)
                 {
                     if (!_context.Users.Any(u => u.Username == registrationClass.userName || u.Email == registrationClass.email))
@@ -104,6 +119,13 @@ namespace MS_Back_Auth.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Login user.
+        /// </summary>
+        /// <response code="200">Login succwssful. Returns json with jwt tokens and userName</response>
+        /// <response code="400">The user already exists, received data is null, passwords don't match, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">There is no user with this login, the password doesn't match. Returns message about error</response>
         [Route("UserLogin")]
         [HttpPost]
         public async Task<IActionResult> UserLoginPost([FromBody] LoginClass model)
@@ -111,6 +133,14 @@ namespace MS_Back_Auth.Controllers
             LogModel logModel = LogModelCreate("UserLoginPost", "Login successful");
             try
             {
+                if (model == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Received data is null";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
                 string cryptedPassword = Cryptography.ConvertPassword(model.password);
                 User? dbuser = _context.Users.FirstOrDefault(u => u.Username == model.userName);
                 logModel.userId = dbuser == null? -1 : dbuser.Id;
@@ -144,10 +174,18 @@ namespace MS_Back_Auth.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Get new tokens.
+        /// </summary>
+        /// <response code="200">Token change successful. Returns json with jwt tokens and userName</response>
+        /// <response code="400">User ID (from token) conversion in int failed, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token. Returns message about error</response>
+        /// <response code="404">The user wasn't found. Returns message about error</response>
         [Route("RefreshToken")]
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> RefreshTokenGet() //если токен пустой, добавить обработчик
+        public async Task<IActionResult> RefreshTokenGet()
         {
             LogModel logModel = LogModelCreate("RefreshTokenGet", "Reftesh token gotten");
             try
@@ -156,6 +194,12 @@ namespace MS_Back_Auth.Controllers
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
                 string userName = _context.Users.FirstOrDefault(u => u.Id == parsedUserId).Username; //стоит ли это оставлять так или лучше доставать значение из токена
+                if (userName == null)
+                {
+                    logModel.errorCode = "404";
+                    logModel.logLevel = "Error";
+                    logModel.message = "The user wasn't found";
+                }
                 TokenResponceClass response = CreateJWT(userName, parsedUserId.ToString());
 
                 await LogEventAsync(logModel);
@@ -168,14 +212,30 @@ namespace MS_Back_Auth.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Check if password correct.
+        /// </summary>
+        /// <response code="200">Password correct. Returns message about completion</response>
+        /// <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
+        /// <response code="401">Invalid or missing token, the password doesn't match. Returns message about error</response>
+        /// <response code="404">The user wasn't found. Returns message about error</response>
         [Route("PasswordCheck")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> PasswordCheck([FromBody] PasswordClass password)
+        public async Task<IActionResult> PasswordCheck([FromBody] PasswordClass? password)
         {
             LogModel logModel = LogModelCreate("PasswordCheck", "The password is correct");
             try
             {
+                if (password == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Received data is null";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
@@ -186,9 +246,9 @@ namespace MS_Back_Auth.Controllers
                 {
                     logModel.logLevel = "Error";
                     logModel.message = "There is no such user";
-                    logModel.errorCode = "401";
+                    logModel.errorCode = "404";
                     await LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
+                    return NotFound(logModel.message);
                 }
 
                 else if (user.Password != cryptedPassword)
@@ -209,21 +269,43 @@ namespace MS_Back_Auth.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Check if user exists.
+        /// </summary>
+        /// <remarks>If user exists, it sends confirmation and his username. If user doesn't exists or recieved data is wrong, it sends denial</remarks>
         [Route("UserIdCheck/{idModel:int}")]
         [HttpGet]
-        public async Task<(bool, string)> UserIdCheck(int idModel) //стоит ли это логировать
+        public async Task<(bool, string)> UserIdCheck(int? idModel) //стоит ли это логировать
         {
-            bool isValid = false;
-            Console.WriteLine("133");
-            User? user = _context.Users.FirstOrDefault(u => u.Id == idModel);
-            string userName = "";
-
-            if (user != null)
+            LogModel logModel = LogModelCreate("UserIdCheck", "Check successful");
+            try
             {
-                isValid = true;
-                userName = user.Username;
+                if (idModel == null || idModel < 0)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "Received data is wrong";
+                    logModel.errorCode = "400";
+                    await LogEventAsync(logModel);
+                    return (false, "");
+                }
+
+                bool isValid = false;
+                User? user = _context.Users.FirstOrDefault(u => u.Id == idModel);
+                string userName = "";
+
+                if (user != null)
+                {
+                    isValid = true;
+                    userName = user.Username;
+                }
+                return (isValid, userName);
             }
-            return (isValid, userName);
+            catch (Exception ex)
+            {
+                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                return (false, "");
+            }
         }
 
         private TokenResponceClass CreateJWT(string userName, string userId)

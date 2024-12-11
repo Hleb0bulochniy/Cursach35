@@ -5,6 +5,7 @@ using System.Text;
 using MS_Back_Auth.Controllers;
 using System;
 using MS_Back_Auth.Data;
+using System.Reflection;
 
 namespace MS_Back_Auth
 {
@@ -12,12 +13,18 @@ namespace MS_Back_Auth
     {
         public static void Main(string[] args)
         {
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            //builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.IncludeXmlComments(xmlPath);
+            });
 
             builder.Services.AddAuthorization();
 
