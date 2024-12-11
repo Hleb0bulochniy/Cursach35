@@ -39,7 +39,7 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> ProgressCustomPost([FromBody] MapSaveModel? mapSaveModel)
         {
-            LogModel logModel = LogModelCreate("ProgressCustomPost", "Progress was pasted");
+            LogModel logModel = _helpfuncs.LogModelCreate("ProgressCustomPost", "Progress was pasted");
             try
             {
                 if (mapSaveModel == null)
@@ -47,7 +47,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Received data is null";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -56,7 +56,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(map => (map.CustomMapId == mapSaveModel.mapId) && (map.UserId == parsedUserId));
@@ -101,12 +101,12 @@ namespace MS_Back_Maps.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -124,7 +124,7 @@ namespace MS_Back_Maps.Controllers
         [HttpGet]
         public async Task<IActionResult> ProgressCustomGet(int? idModel)
         {
-            LogModel logModel = LogModelCreate("ProgressCustomGet", "Progress was gotten");
+            LogModel logModel = _helpfuncs.LogModelCreate("ProgressCustomGet", "Progress was gotten");
             try
             {
                 if (idModel <= 0 || idModel == null)
@@ -132,7 +132,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Received data is wrong";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
@@ -140,7 +140,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idModel)));
@@ -169,12 +169,12 @@ namespace MS_Back_Maps.Controllers
                     lastGameTime = customMapsInUser.LastGameTime,
                 };
 
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(mapSaveModel);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -193,7 +193,7 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveListCustomPost([FromBody] MapSaveListModel? mapSaveListModel)
         {
-            LogModel logModel = LogModelCreate("SaveListCustomPost", "Custom save list posted");
+            LogModel logModel = _helpfuncs.LogModelCreate("SaveListCustomPost", "Custom save list posted");
             try
             {
                 if (mapSaveListModel.mapSaveList == null || !mapSaveListModel.mapSaveList.Any() || mapSaveListModel == null)
@@ -201,7 +201,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Received data is wrong";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -210,7 +210,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 var existingMaps = _context.CustomMapsInUsers.Where(map => map.UserId == parsedUserId && mapSaveListModel.mapSaveList.Select(m => m.mapId).Contains(map.CustomMapId)).ToDictionary(map => map.CustomMapId);
@@ -263,12 +263,12 @@ namespace MS_Back_Maps.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -286,7 +286,7 @@ namespace MS_Back_Maps.Controllers
         [HttpGet]
         public async Task<IActionResult> SaveMapsListCustomGet()
         {
-            LogModel logModel = LogModelCreate("SaveMapsListCustomGet", "Custom save list gotten");
+            LogModel logModel = _helpfuncs.LogModelCreate("SaveMapsListCustomGet", "Custom save list gotten");
             try
             {
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
@@ -294,7 +294,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 List<CustomMapsInUser> maps = _context.CustomMapsInUsers
@@ -305,16 +305,16 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "There are no custom map saves for this user";
                     logModel.errorCode = "404";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return NotFound(logModel.message);
                 }
 
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(maps);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -332,7 +332,7 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> RatePost([FromBody] RateMap? rateMap)
         {
-            LogModel logModel = LogModelCreate("RatePost", "Rate pasted");
+            LogModel logModel = _helpfuncs.LogModelCreate("RatePost", "Rate pasted");
             try
             {
                 if (rateMap == null)
@@ -340,7 +340,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Received data is null";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -349,7 +349,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == rateMap.mapId);
@@ -365,7 +365,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "The rate already exists";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -374,12 +374,12 @@ namespace MS_Back_Maps.Controllers
                 customMap.RatingCount += 1;
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -396,7 +396,7 @@ namespace MS_Back_Maps.Controllers
         [HttpPut]
         public async Task<IActionResult> RatePut([FromBody] RateMap? rateMap)
         {
-            LogModel logModel = LogModelCreate("RatePut", "New rate putted");
+            LogModel logModel = _helpfuncs.LogModelCreate("RatePut", "New rate putted");
             try
             {
                 if (rateMap == null)
@@ -404,7 +404,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Received data is null";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -413,7 +413,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == rateMap.mapId);
@@ -429,7 +429,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "The old rate doesn't exist";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -438,12 +438,12 @@ namespace MS_Back_Maps.Controllers
                 customMap.RatingSum += rateMap.newRate;
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -461,7 +461,7 @@ namespace MS_Back_Maps.Controllers
         [HttpDelete]
         public async Task<IActionResult> RateDelete(int? idModel)
         {
-            LogModel logModel = LogModelCreate("RateDelete", "Rate deleted");
+            LogModel logModel = _helpfuncs.LogModelCreate("RateDelete", "Rate deleted");
             try
             {
                 if (idModel <= 0 || idModel == null)
@@ -469,7 +469,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Recieved data is wrong";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
@@ -477,7 +477,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == idModel);
@@ -493,7 +493,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "The old rate doesn't exist";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -502,12 +502,12 @@ namespace MS_Back_Maps.Controllers
                 customMapsInUser.Rate = 0;
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -526,7 +526,7 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> DownLoadPost(int? idModel)
         {
-            LogModel logModel = LogModelCreate("DownLoadPost", "Map download was posted");
+            LogModel logModel = _helpfuncs.LogModelCreate("DownLoadPost", "Map download was posted");
             try
             {
                 if (idModel <= 0 || idModel == null)
@@ -534,7 +534,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Recieved data is wrong";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -543,7 +543,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idModel)));
@@ -590,12 +590,12 @@ namespace MS_Back_Maps.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -613,7 +613,7 @@ namespace MS_Back_Maps.Controllers
         [HttpDelete]
         public async Task<IActionResult> DownLoadDelete(int? idModel)
         {
-            LogModel logModel = LogModelCreate("DownLoadDelete", "Map download was deleted");
+            LogModel logModel = _helpfuncs.LogModelCreate("DownLoadDelete", "Map download was deleted");
             try
             {
                 if (idModel <= 0 || idModel == null)
@@ -621,7 +621,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Recieved data is wrong";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
@@ -629,7 +629,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == idModel);
@@ -645,12 +645,12 @@ namespace MS_Back_Maps.Controllers
                 customMapsInUser.IsAdded = false;
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -668,7 +668,7 @@ namespace MS_Back_Maps.Controllers
         [HttpPost]
         public async Task<IActionResult> FavouritePost(int? idModel) //можно поменять так же как у downloadpost
         {
-            LogModel logModel = LogModelCreate("FavouritePost", "Map favourite mark was posted");
+            LogModel logModel = _helpfuncs.LogModelCreate("FavouritePost", "Map favourite mark was posted");
             try
             {
                 if (idModel <= 0 || idModel == null)
@@ -676,7 +676,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Recieved data is wrong";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
 
@@ -685,7 +685,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idModel)));
@@ -700,12 +700,12 @@ namespace MS_Back_Maps.Controllers
                 customMapsInUser.IsFavourite = true;
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -723,7 +723,7 @@ namespace MS_Back_Maps.Controllers
         [HttpDelete]
         public async Task<IActionResult> FavouriteDelete(int? idModel)
         {
-            LogModel logModel = LogModelCreate("FavouriteDelete", "Map favourite mark was deleted");
+            LogModel logModel = _helpfuncs.LogModelCreate("FavouriteDelete", "Map favourite mark was deleted");
             try
             {
                 if (idModel <= 0 || idModel == null)
@@ -731,7 +731,7 @@ namespace MS_Back_Maps.Controllers
                     logModel.logLevel = "Error";
                     logModel.message = "Recieved data is wrong";
                     logModel.errorCode = "400";
-                    await LogEventAsync(logModel);
+                    await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
@@ -739,7 +739,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.userId = parsedUserId;
 
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await UserIdCheck(requestId, parsedUserId, logModel);
+                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
                 CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.Id == idModel)));
@@ -754,12 +754,12 @@ namespace MS_Back_Maps.Controllers
                 customMapsInUser.IsFavourite = false;
 
                 await _context.SaveChangesAsync();
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return Ok(logModel.message);
             }
             catch (Exception ex)
             {
-                LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return BadRequest(updatedLogModel.message);
             }
         }
@@ -772,62 +772,6 @@ namespace MS_Back_Maps.Controllers
 
 
 
-
-
-
-
-
-
-
-
-        private async Task LogEventAsync(LogModel logModel)
-        {
-            var message = JsonSerializer.Serialize(logModel);
-            await _producerService.ProduceAsync("LogUpdates", message);
-        }
-
-        private async Task UserIdCheckEventAsync(UserIdCheckModel userIdCheckModel)
-        {
-            var message = JsonSerializer.Serialize(userIdCheckModel);
-            await _producerService.ProduceAsync("UserIdCheckRequest", message);
-        }
-
-        private async Task<LogModel> UserIdCheck(string requestId, int parsedUserId, LogModel logModel)
-        {
-            UserIdCheckModel requestMessage = new UserIdCheckModel
-            {
-                requestId = requestId,
-                userId = parsedUserId,
-                isValid = false
-            };
-            UserIdCheckEventAsync(requestMessage);
-            var response = await _producerService.WaitForKafkaResponseAsync(requestId, "UserIdCheckResponce", TimeSpan.FromSeconds(10));
-            if (response == null)
-            {
-                logModel.logLevel = "Error";
-                logModel.message = "User does not exist";
-                logModel.errorCode = "404";
-                await LogEventAsync(logModel);
-            }
-            return logModel;
-        }
-
-
-        private LogModel LogModelCreate(string eventType, string message)
-        {
-            return new LogModel
-            {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "CustomMapsInUsersController",
-                logLevel = "Info",
-                eventType = eventType,
-                message = message,
-                details = "",
-                errorCode = "200"
-            };
-        }
-
         private async Task<(bool Success, IActionResult? Result, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
         {
             string? userId = _helpfuncs.GetUserIdFromToken(request);
@@ -836,7 +780,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.logLevel = "Error";
                 logModel.message = "Invalid or missing token";
                 logModel.errorCode = "401";
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return (false, Unauthorized(logModel.message), -1);
             }
 
@@ -845,7 +789,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.logLevel = "Error";
                 logModel.message = "User ID conversion in int failed";
                 logModel.errorCode = "400";
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return (false, BadRequest(logModel.message), -1);
             }
 
@@ -859,7 +803,7 @@ namespace MS_Back_Maps.Controllers
                 logModel.logLevel = "Error";
                 logModel.message = "The custom map doesn't exists";
                 logModel.errorCode = "404";
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return (false, NotFound(logModel.message));
             }
             return (true, null);
@@ -872,20 +816,10 @@ namespace MS_Back_Maps.Controllers
                 logModel.logLevel = "Error";
                 logModel.message = "The customMap:user doesn't exists";
                 logModel.errorCode = "404";
-                await LogEventAsync(logModel);
+                await _helpfuncs.LogEventAsync(logModel);
                 return (false, NotFound(logModel.message));
             }
             return (true, null);
-        }
-
-        private async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
-        {
-            logModel.logLevel = "Error";
-            logModel.message = "Server error";
-            logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
-            logModel.errorCode = "400";
-            await LogEventAsync(logModel);
-            return logModel;
         }
     }
 }
