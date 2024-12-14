@@ -42,7 +42,6 @@ namespace MS_Back_Auth
             {
                 try
                 {
-                    Console.WriteLine("lb1l");
                     var consumeResult = _consumer.Consume(stoppingToken);
 
                     await ProcessMessageAsync(consumeResult.Message.Value);
@@ -58,14 +57,11 @@ namespace MS_Back_Auth
 
         private async Task ProcessMessageAsync(string message)
         {
-            Console.WriteLine("qwertyuiop");
             var request = JsonSerializer.Deserialize<UserIdCheckModel>(message);
             if (request == null) return;
 
-            // Логика проверки существования пользователя
             (bool userExists, string userName) = await _controller.UserIdCheck(request.userId);
 
-            // Создание ответа
             UserIdCheckModel response = new UserIdCheckModel
             {
                 requestId = request.requestId,
@@ -74,7 +70,6 @@ namespace MS_Back_Auth
                 userName = userName
             };
 
-            // Отправка ответа в Kafka
             await _producer.ProduceAsync("UserIdCheckResponce", new Message<Null, string>
             {
                 Value = JsonSerializer.Serialize(response)

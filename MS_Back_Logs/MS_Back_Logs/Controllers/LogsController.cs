@@ -21,7 +21,7 @@ namespace MS_Back_Logs.Controllers
         }
 
         /// <summary>
-        /// Logs info.
+        /// Log info.
         /// </summary>
         /// <response code="200">Info was logged. Returns message about completion</response>
         /// <response code="400">Received data is null, other error (watch Logs). Returns message about error</response>

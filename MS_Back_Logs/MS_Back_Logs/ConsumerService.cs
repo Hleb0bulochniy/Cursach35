@@ -28,7 +28,6 @@ namespace MS_Back_Logs
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _consumer.Subscribe("LogUpdates");
-            Console.WriteLine("lbl");
             while (!stoppingToken.IsCancellationRequested)
             {
                 ProcessKafkaMessage(stoppingToken);
