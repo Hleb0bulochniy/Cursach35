@@ -63,7 +63,6 @@
         public int flagsSum { get; set; }
         public int flagsOnBombs {  get; set; }
         public int timeSpentSum { get; set; }
-        public int averageTime {  get; set; }
         public string lastGameData { get; set; }
         public int lastGameTime { get; set; }
     }
@@ -92,7 +91,10 @@
     public class UserIdCheckModel
     {
         public string requestId { get; set; }
-        public int userId { get; set; }
+        public string requestMessage { get; set; }
+        public int? userId { get; set; }
+        public int? playerId { get; set; }
+        public int? creatorId { get; set; }
         public bool isValid { get; set; }
         public string userName { get; set; }
     }

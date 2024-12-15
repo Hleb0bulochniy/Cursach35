@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MS_Back_Maps.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,17 +16,52 @@ namespace MS_Back_Maps
             _producerService = producerService;
             _context = mapsContext;
         }
-        public string? GetUserIdFromToken(HttpRequest request)
+        public (string?, string?, string?) GetUserIdFromToken(HttpRequest request)
         {
             string? authorizationHeader = request.Headers["Authorization"];
-            if (authorizationHeader == null) return null;
+            if (authorizationHeader == null) return (null, null, null);
 
             string token = authorizationHeader.Replace("Bearer ", "");
             var handler = new JwtSecurityTokenHandler();
-            if (!handler.CanReadToken(token)) return null;
+            if (!handler.CanReadToken(token)) return (null, null, null);
 
             var jwtToken = handler.ReadJwtToken(token);
-            return jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+            string? userId;
+            string? playerId;
+            string? creatorId;
+            userId = jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+            playerId = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "PlayerIdentifier")?.Value;
+            creatorId = jwtToken.Claims.FirstOrDefault(claim => claim.Type == "CreatorIdentifier")?.Value;
+            return (userId, playerId, creatorId);
+        }
+
+        public async Task<(LogModel, int, int?, int?)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
+        {
+            string? userId;
+            string? playerId;
+            string? creatorId;
+            (userId, playerId, creatorId) = GetUserIdFromToken(request);
+            if (string.IsNullOrEmpty(userId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "Invalid or missing token";
+                logModel.errorCode = "401";
+                await LogEventAsync(logModel);
+                return (logModel, -1, null, null);
+            }
+
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User ID conversion in int failed";
+                logModel.errorCode = "400";
+                await LogEventAsync(logModel);
+                return (logModel, -1, null, null);
+            }
+            int.TryParse(playerId, out int parsedPlayerId);
+            int.TryParse(creatorId, out int parsedCreatorId);
+
+            return (logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
         }
 
         public async Task LogEventAsync(LogModel logModel)
@@ -50,15 +86,18 @@ namespace MS_Back_Maps
         }
 
 
-        public async Task<LogModel> UserIdCheck(string requestId, int parsedUserId, LogModel logModel)
+        public async Task<(UserIdCheckModel, LogModel)> UserIdCheck(string requestId, string requestMessage, LogModel logModel, int? parsedUserId, int? parsedPlayerId, int? parserCreatorId)
         {
-            UserIdCheckModel requestMessage = new UserIdCheckModel
+            UserIdCheckModel requestToKafka = new UserIdCheckModel
             {
                 requestId = requestId,
+                requestMessage = requestMessage,
                 userId = parsedUserId,
+                playerId = parsedPlayerId,
+                creatorId = parserCreatorId,
                 isValid = false
             };
-            UserIdCheckEventAsync(requestMessage);
+            UserIdCheckEventAsync(requestToKafka);
             var response = await _producerService.WaitForKafkaResponseAsync(requestId, "UserIdCheckResponce", TimeSpan.FromSeconds(10));
             if (response == null)
             {
@@ -67,7 +106,7 @@ namespace MS_Back_Maps
                 logModel.errorCode = "404";
                 await LogEventAsync(logModel);
             }
-            return logModel;
+            return (response,logModel);
         }
 
         public LogModel LogModelCreate(string eventType, string message)

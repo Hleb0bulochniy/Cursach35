@@ -163,7 +163,7 @@ namespace MS_Back_Auth.Controllers
                     return Unauthorized(logModel.message);
                 }
 
-                TokenResponceClass response = CreateJWT(dbuser.Username, dbuser.Id.ToString());
+                TokenResponceClass response = CreateJWT(dbuser.Username, dbuser.Id.ToString(), dbuser.PlayerId == null ? "-1" : dbuser.PlayerId.ToString(), dbuser.CreatorId == null ? "-1" : dbuser.CreatorId.ToString());
 
                 await LogEventAsync(logModel);
                 return Ok(response);
@@ -194,14 +194,14 @@ namespace MS_Back_Auth.Controllers
                 var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success) return result!;
                 logModel.userId = parsedUserId;
-                string userName = _context.Users.FirstOrDefault(u => u.Id == parsedUserId).Username; //стоит ли это оставлять так или лучше доставать значение из токена
-                if (userName == null)
+                User user = _context.Users.FirstOrDefault(u => u.Id == parsedUserId); //стоит ли это оставлять так или лучше доставать значение из токена
+                if (user == null)
                 {
                     logModel.errorCode = "404";
                     logModel.logLevel = "Error";
                     logModel.message = "The user wasn't found";
                 }
-                TokenResponceClass response = CreateJWT(userName, parsedUserId.ToString());
+                TokenResponceClass response = CreateJWT(user.Username, parsedUserId.ToString(), user.PlayerId == null ? "-1" : user.PlayerId.ToString(), user.CreatorId == null ? "-1" : user.CreatorId.ToString());
 
                 await LogEventAsync(logModel);
                 return Ok(response);
@@ -277,43 +277,93 @@ namespace MS_Back_Auth.Controllers
         /// <remarks>If user exists, it sends confirmation and his username. If user doesn't exists or recieved data is wrong, it sends denial</remarks>
         [Route("UserIdCheck/{idModel:int}")]
         [HttpGet]
-        public async Task<(bool, string)> UserIdCheck(int? idModel) //стоит ли это логировать
+        public async Task<UserIdCheckModel> UserIdCheck(UserIdCheckModel userIdCheckModel) //стоит ли это логировать
         {
             LogModel logModel = LogModelCreate("UserIdCheck", "Check successful");
             try
             {
-                if (idModel == null || idModel < 0)
+                Console.WriteLine("1");
+                /*if (userIdCheckModel == null || userIdCheckModel.userId < 0)
                 {
                     logModel.logLevel = "Error";
                     logModel.message = "Received data is wrong";
                     logModel.errorCode = "400";
+                    userIdCheckModel.isValid = false;
+                    userIdCheckModel.userName = "";
+
                     await LogEventAsync(logModel);
-                    return (false, "");
-                }
+                     
+                    return userIdCheckModel;
+                }*/
+                User? user = new User();
 
-                bool isValid = false;
-                User? user = _context.Users.FirstOrDefault(u => u.Id == idModel);
-                string userName = "";
-
-                if (user != null)
+                user = _context.Users.FirstOrDefault(u => u.Id == userIdCheckModel.userId);
+                if (user == null)
                 {
-                    isValid = true;
-                    userName = user.Username;
+                    user = _context.Users.FirstOrDefault(u => u.PlayerId == userIdCheckModel.playerId);
+                    if (user == null)
+                    {
+                        user = _context.Users.FirstOrDefault(u => u.CreatorId == userIdCheckModel.creatorId);
+                    }
                 }
-                return (isValid, userName);
+
+                if (user == null)
+                {
+                    logModel.logLevel = "Error";
+                    logModel.message = "There is no such user";
+                    logModel.errorCode = "404";
+                    userIdCheckModel.isValid = false;
+                    userIdCheckModel.userName = "";
+
+                    await LogEventAsync(logModel);
+
+                    return userIdCheckModel;
+                }
+
+                userIdCheckModel.isValid = true;
+                userIdCheckModel.userName = user.Username;
+
+                if (userIdCheckModel.requestMessage == "player")
+                {
+
+                    if (user.PlayerId == -1 || user.PlayerId == null)
+                    {
+                        int? max = _context.Users.Max(u => u.PlayerId) + 1;
+                        user.PlayerId = (max == 0 || max == null) ? 1 : max;
+                        _context.SaveChangesAsync();
+                    }
+
+                    userIdCheckModel.playerId = (int)user.PlayerId;
+                }
+                if (userIdCheckModel.requestMessage == "creator")
+                {
+
+                    if (user.CreatorId == -1 || user.CreatorId == null)
+                    {
+                        int? max = _context.Users.Max(u => u.CreatorId) + 1;
+                        user.CreatorId = (max == 0 || max == null) ? 1 : max;
+                        _context.SaveChangesAsync();
+                    }
+
+                    userIdCheckModel.creatorId = user.CreatorId;
+                }
+
+                return userIdCheckModel;
             }
             catch (Exception ex)
             {
                 LogModel updatedLogModel = await LogModelChangeForServerError(logModel, ex);
-                return (false, "");
+                return userIdCheckModel;
             }
         }
 
-        private TokenResponceClass CreateJWT(string userName, string userId)
+        private TokenResponceClass CreateJWT(string userName, string userId, string playerId, string creatorId)
         {
             var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier,userId),
+                    new Claim("PlayerIdentifier",playerId),
+                    new Claim("CreatorIdentifier",creatorId),
                     new Claim(ClaimTypes.Name,userName),
                 };
 

@@ -36,7 +36,7 @@ namespace MS_Back_Maps.Controllers
         [Route("CustomMap")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CustomMapPost([FromBody] CustomMapData? customMapData)
+        public async Task<IActionResult> CustomMapPost([FromBody] CustomMapData? customMapData)//путаются maptype и mapsize
         {
             LogModel logModel = _helpfuncs.LogModelCreate("CustomMapPost", "Custom map was added");
             try
@@ -49,16 +49,19 @@ namespace MS_Back_Maps.Controllers
                     await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
-                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
-                if (!success) return result!;
+
+                var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
+                if (result.logLevel == "Error") return BadRequest(logModel.message);
                 logModel.userId = parsedUserId;
 
+                UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
+                (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "creator", logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
-
-                CustomMap? mapCheck = _context.CustomMaps.FirstOrDefault(u => u.MapName == customMapData.mapName && u.CreatorId == customMapData.creatorId);
-                if (mapCheck != null)
+                
+                Map? mapCheck2 = _context.Maps.FirstOrDefault(u => u.MapName == customMapData.mapName && u.About == customMapData.about);
+                
+                if (mapCheck2 != null)
                 {
                     logModel.logLevel = "Error";
                     logModel.message = "This map already exists";
@@ -66,29 +69,43 @@ namespace MS_Back_Maps.Controllers
                     await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
-
-                MapsContext context = new MapsContext();
-                if (customMapData == null)
-                {
-                    logModel.logLevel = "Error";
-                    logModel.message = "New data in body is null";
-                    logModel.errorCode = "404";
-                    await _helpfuncs.LogEventAsync(logModel);
-                    return NotFound(logModel.message);
-                }
-                CustomMap customMap = new CustomMap
+                
+                Map map = new Map
                 {
                     MapName = customMapData.mapName,
                     BombCount = customMapData.bombCount,
                     MapSize = customMapData.mapSize,
                     MapType = (int)customMapData.mapType,
-                    CreatorId = customMapData.creatorId,
+                    IsCustom = true,
+                    About = customMapData.about,
+                };
+                
+                await _context.Maps.AddAsync(map);
+                await _context.SaveChangesAsync();
+
+
+                CustomMap? mapCheck = _context.CustomMaps.FirstOrDefault(u => u.MapId == map.Id && u.CreatorId == userIdCheckModel.creatorId);
+
+                if (mapCheck2 != null)
+                {
+
+                    logModel.logLevel = "Error";
+                    logModel.message = "This customMap already exists";
+                    logModel.errorCode = "400";
+                    await _helpfuncs.LogEventAsync(logModel);
+                    return BadRequest(logModel.message);
+                }
+
+                CustomMap customMap = new CustomMap
+                {
+                    MapId = map.Id,
+                    CreatorId = (int)userIdCheckModel.creatorId,
                     CreationDate = customMapData.creationDate,
                     RatingSum = customMapData.ratingSum,
                     RatingCount = customMapData.ratingCount,
                     Downloads = customMapData.downloads,
-                    About = customMapData.about
                 };
+
                 await _context.CustomMaps.AddAsync(customMap);
                 await _context.SaveChangesAsync();
 
@@ -124,45 +141,36 @@ namespace MS_Back_Maps.Controllers
                     await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
-                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.Id == idModel);
-                if (customMap == null)
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.MapId == idModel);
+                Map? map = _context.Maps.FirstOrDefault(map => map.Id == idModel);
+
+                if (customMap == null || map == null)
                 {
                     logModel.logLevel="Error";
                     logModel.message = "Map was not found by MapId";
                     logModel.errorCode = "404";
                     return NotFound(logModel.message);
                 }
+
+                UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
                 string requestId = Guid.NewGuid().ToString();
-                UserIdCheckModel userIdCheckModel = new UserIdCheckModel
-                {
-                    requestId = requestId,
-                    userId = customMap.CreatorId
-                };
+                (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "", logModel, null, null, customMap.CreatorId);
+                if (logModel.errorCode == "404") return NotFound(logModel.message);
 
-                _helpfuncs.UserIdCheckEventAsync(userIdCheckModel);
-                var response = await _producerService.WaitForKafkaResponseAsync(requestId, "UserIdCheckResponce", TimeSpan.FromSeconds(10));
-                if (response == null)
+                CustomMapData customMapData = new CustomMapData 
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Map creator does not exist";
-                    logModel.errorCode = "404";
-                    await _helpfuncs.LogEventAsync(logModel);
-                }
-
-                CustomMapData customMapData = new CustomMapData
-                {
-                    mapID = customMap.Id,
-                    mapName = customMap.MapName,
-                    bombCount = customMap.BombCount,
-                    mapSize = customMap.MapSize,
-                    mapType = (CustomMapType)customMap.MapType,
+                    mapID = map.Id,
+                    mapName = map.MapName,
+                    bombCount = map.BombCount,
+                    mapSize = map.MapSize,
+                    mapType = (CustomMapType)map.MapType,
                     creatorId = customMap.CreatorId,
-                    creatorName = response.userName,
+                    creatorName = userIdCheckModel.userName,
                     creationDate = customMap.CreationDate,
                     ratingSum = customMap.RatingSum,
                     ratingCount = customMap.RatingCount,
                     downloads = customMap.Downloads,
-                    about = customMap.About
+                    about = map.About
                 };
                 await _helpfuncs.LogEventAsync(logModel);
                 return Ok(customMapData);
@@ -198,16 +206,18 @@ namespace MS_Back_Maps.Controllers
                     await _helpfuncs.LogEventAsync(logModel);
                     return BadRequest(logModel.message);
                 }
-                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
-                if (!success) return result!;
+                var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
+                if (result.logLevel == "Error") return BadRequest(logModel.message);
                 logModel.userId = parsedUserId;
 
+                UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
+                (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "creator", logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
-                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => (cmap.Id == idModel) && (cmap.CreatorId == parsedUserId));
-                if (customMap == null)
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => (cmap.MapId == idModel) && (cmap.CreatorId == userIdCheckModel.creatorId));
+                Map? map = _context.Maps.FirstOrDefault(map => map.Id == idModel);
+                if (customMap == null || map == null)
                 {
                     logModel.logLevel = "Error";
                     logModel.message = "Map wasn't found by mapId and userId";
@@ -215,6 +225,7 @@ namespace MS_Back_Maps.Controllers
                     return NotFound(logModel.message);
                 }
                 _context.CustomMaps.Remove(customMap);
+                _context.Maps.Remove(map);
                 await _context.SaveChangesAsync();
                 return Ok(logModel.message);
             }
@@ -250,15 +261,16 @@ namespace MS_Back_Maps.Controllers
                     return BadRequest(logModel.message);
                 }
 
-                var (success, result, parsedUserId) = await ValidateAndParseUserIdAsync(Request, logModel);
-                if (!success) return result!;
+                var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
+                if (result.logLevel == "Error") return BadRequest(logModel.message);
                 logModel.userId = parsedUserId;
 
+                UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
                 string requestId = Guid.NewGuid().ToString();
-                logModel = await _helpfuncs.UserIdCheck(requestId, parsedUserId, logModel);
+                (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "creator", logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
                 if (logModel.errorCode == "404") return NotFound(logModel.message);
 
-                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => ((cmap.MapName == customMapData.mapName) && (cmap.CreatorId == parsedUserId))); //стоит ли тут делать поиск по имени карты или id
+                CustomMap? customMap = _context.CustomMaps.FirstOrDefault(cmap => cmap.CreatorId == userIdCheckModel.creatorId && cmap.MapId == customMapData.mapID);
                 if (customMap == null)
                 {
                     logModel.logLevel = "Error";
@@ -266,12 +278,13 @@ namespace MS_Back_Maps.Controllers
                     logModel.errorCode = "404";
                     return NotFound(logModel.message);
                 }
+                Map map = _context.Maps.FirstOrDefault(map => map.Id == customMap.MapId && map.MapName == customMapData.mapName);
 
-                customMap.MapName = customMapData.mapName;
-                customMap.BombCount = customMapData.bombCount;
-                customMap.MapSize = customMapData.mapSize;
-                customMap.MapType = (int)customMapData.mapType;
-                customMap.About = customMapData.about;
+                map.MapName = customMapData.mapName;
+                map.BombCount = customMapData.bombCount;
+                map.MapSize = customMapData.mapSize;
+                map.MapType = (int)customMapData.mapType;
+                map.About = customMapData.about;
 
                 await _context.SaveChangesAsync();
                 return Ok(logModel.message);
@@ -284,31 +297,6 @@ namespace MS_Back_Maps.Controllers
         }
 
 
-
-
-        private async Task<(bool Success, IActionResult? Result, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
-        {
-            string? userId = _helpfuncs.GetUserIdFromToken(request);
-            if (string.IsNullOrEmpty(userId))
-            {
-                logModel.logLevel = "Error";
-                logModel.message = "Invalid or missing token";
-                logModel.errorCode = "401";
-                await _helpfuncs.LogEventAsync(logModel);
-                return (false, Unauthorized(logModel.message), -1);
-            }
-
-            if (!int.TryParse(userId, out int parsedUserId))
-            {
-                logModel.logLevel = "Error";
-                logModel.message = "User ID conversion in int failed";
-                logModel.errorCode = "400";
-                await _helpfuncs.LogEventAsync(logModel);
-                return (false, BadRequest(logModel.message), -1);
-            }
-
-            return (true, null, parsedUserId);
-        }
 
         private async Task<(bool Success, IActionResult? Result)> CustomMapNullCheck(CustomMap? customMap, LogModel logModel)
         {
@@ -335,7 +323,5 @@ namespace MS_Back_Maps.Controllers
             }
             return (true, null);
         }
-
-
     }
 }

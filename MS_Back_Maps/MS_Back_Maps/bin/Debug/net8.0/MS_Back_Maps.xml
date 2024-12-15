@@ -39,44 +39,6 @@
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found. Returns message about error</response>
         </member>
-        <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.ProgressCustomPost(MS_Back_Maps.MapSaveModel)">
-            <summary>
-            Save progress of user on custom the map in db.
-            </summary>
-            <remarks>If there is no data aobut saves in db, this method creates it</remarks>
-            <response code="200">Progress was saved. Returns message about completion</response>
-            <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
-            <response code="401">Invalid or missing token. Returns message about error</response>
-            <response code="404">User wasn't found. Returns message about error</response>
-        </member>
-        <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.ProgressCustomGet(System.Nullable{System.Int32})">
-            <summary>
-            Get progress of user on custom the map.
-            </summary>
-            <response code="200">Progress was sent. Returns json with progress</response>
-            <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
-            <response code="401">Invalid or missing token. Returns message about error</response>
-            <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
-        </member>
-        <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.SaveListCustomPost(MS_Back_Maps.MapSaveListModel)">
-            <summary>
-            Save progress of user on several custom maps in db.
-            </summary>
-            <remarks>If there is no data aobut saves in db, this method creates it</remarks>
-            <response code="200">Progress was saved. Returns message about completion</response>
-            <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
-            <response code="401">Invalid or missing token. Returns message about error</response>
-            <response code="404">User wasn't found. Returns message about error</response>
-        </member>
-        <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.SaveMapsListCustomGet">
-            <summary>
-            Get progress of user on all maps.
-            </summary>
-            <response code="200">Progress was sent. Returns json with progress</response>
-            <response code="400">User ID (from token) conversion in int failed, other error (watch Logs). Returns message about error</response>
-            <response code="401">Invalid or missing token. Returns message about error</response>
-            <response code="404">User wasn't found, user's map saves weren't found. Returns message about error</response>
-        </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.RatePost(MS_Back_Maps.RateMap)">
             <summary>
             Send new rate on a map.
@@ -179,16 +141,16 @@
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, user's map saves weren't found. Returns message about error</response>
         </member>
-        <member name="T:MS_Back_Maps.Migrations.First_migration">
+        <member name="T:MS_Back_Maps.Migrations.Second_Migration">
             <inheritdoc />
         </member>
-        <member name="M:MS_Back_Maps.Migrations.First_migration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:MS_Back_Maps.Migrations.Second_Migration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:MS_Back_Maps.Migrations.First_migration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:MS_Back_Maps.Migrations.Second_Migration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:MS_Back_Maps.Migrations.First_migration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+        <member name="M:MS_Back_Maps.Migrations.Second_Migration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>

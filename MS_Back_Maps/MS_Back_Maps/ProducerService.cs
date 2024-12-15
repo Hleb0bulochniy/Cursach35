@@ -54,8 +54,8 @@ namespace MS_Back_Maps
                         if (consumeResult != null)
                         {
                             var message = JsonSerializer.Deserialize<UserIdCheckModel>(consumeResult.Message.Value);
-                            Console.WriteLine(consumeResult.Message.Value);
-                            Console.WriteLine(requestId);
+                            //Console.WriteLine(consumeResult.Message.Value);
+                            //Console.WriteLine(requestId);
                             if (message?.requestId == requestId)
                             {
                                 tcs.SetResult(message);

@@ -60,15 +60,9 @@ namespace MS_Back_Auth
             var request = JsonSerializer.Deserialize<UserIdCheckModel>(message);
             if (request == null) return;
 
-            (bool userExists, string userName) = await _controller.UserIdCheck(request.userId);
+            UserIdCheckModel response = new UserIdCheckModel();
 
-            UserIdCheckModel response = new UserIdCheckModel
-            {
-                requestId = request.requestId,
-                userId = request.userId,
-                isValid = userExists,
-                userName = userName
-            };
+            response = await _controller.UserIdCheck(request);
 
             await _producer.ProduceAsync("UserIdCheckResponce", new Message<Null, string>
             {

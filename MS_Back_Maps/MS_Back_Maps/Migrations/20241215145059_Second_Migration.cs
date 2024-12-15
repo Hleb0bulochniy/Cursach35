@@ -6,33 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MS_Back_Maps.Migrations
 {
     /// <inheritdoc />
-    public partial class First_migration : Migration
+    public partial class Second_Migration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "CustomMaps",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    mapName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    bombCount = table.Column<int>(type: "int", nullable: false),
-                    mapSize = table.Column<int>(type: "int", nullable: false),
-                    mapType = table.Column<int>(type: "int", nullable: false),
-                    creatorId = table.Column<int>(type: "int", nullable: false),
-                    creationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ratingSum = table.Column<int>(type: "int", nullable: false),
-                    ratingCount = table.Column<int>(type: "int", nullable: false),
-                    downloads = table.Column<int>(type: "int", nullable: false),
-                    about = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CustomMaps", x => x.id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "Maps",
                 columns: table => new
@@ -42,7 +20,9 @@ namespace MS_Back_Maps.Migrations
                     mapName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     bombCount = table.Column<int>(type: "int", nullable: false),
                     mapSize = table.Column<int>(type: "int", nullable: false),
-                    mapType = table.Column<int>(type: "int", nullable: false)
+                    mapType = table.Column<int>(type: "int", nullable: false),
+                    isCustom = table.Column<bool>(type: "bit", nullable: false),
+                    about = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -50,36 +30,25 @@ namespace MS_Back_Maps.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CustomMapsInUsers",
+                name: "CustomMaps",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    userID = table.Column<int>(type: "int", nullable: false),
-                    customMapID = table.Column<int>(type: "int", nullable: false),
-                    gamesSum = table.Column<int>(type: "int", nullable: false),
-                    wins = table.Column<int>(type: "int", nullable: false),
-                    loses = table.Column<int>(type: "int", nullable: false),
-                    openedTiles = table.Column<int>(type: "int", nullable: false),
-                    openedNumberTiles = table.Column<int>(type: "int", nullable: false),
-                    openedBlankTiles = table.Column<int>(type: "int", nullable: false),
-                    flagsSum = table.Column<int>(type: "int", nullable: false),
-                    flagsOnBombs = table.Column<int>(type: "int", nullable: false),
-                    timeSpentSum = table.Column<int>(type: "int", nullable: false),
-                    averageTime = table.Column<int>(type: "int", nullable: false),
-                    lastGameData = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    lastGameTime = table.Column<int>(type: "int", nullable: false),
-                    isAdded = table.Column<bool>(type: "bit", nullable: false),
-                    isFavourite = table.Column<bool>(type: "bit", nullable: false),
-                    rate = table.Column<int>(type: "int", nullable: false)
+                    mapID = table.Column<int>(type: "int", nullable: false),
+                    creatorId = table.Column<int>(type: "int", nullable: false),
+                    creationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ratingSum = table.Column<int>(type: "int", nullable: false),
+                    ratingCount = table.Column<int>(type: "int", nullable: false),
+                    downloads = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CustomMapsInUsers", x => x.id);
+                    table.PrimaryKey("PK_CustomMaps", x => x.id);
                     table.ForeignKey(
-                        name: "FK_CustomMapsInUsers_CustomMaps_customMapID",
-                        column: x => x.customMapID,
-                        principalTable: "CustomMaps",
+                        name: "FK_CustomMaps_Maps_mapID",
+                        column: x => x.mapID,
+                        principalTable: "Maps",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -90,8 +59,8 @@ namespace MS_Back_Maps.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    userID = table.Column<int>(type: "int", nullable: false),
                     mapID = table.Column<int>(type: "int", nullable: false),
+                    playerID = table.Column<int>(type: "int", nullable: false),
                     gamesSum = table.Column<int>(type: "int", nullable: false),
                     wins = table.Column<int>(type: "int", nullable: false),
                     loses = table.Column<int>(type: "int", nullable: false),
@@ -101,7 +70,6 @@ namespace MS_Back_Maps.Migrations
                     flagsSum = table.Column<int>(type: "int", nullable: false),
                     flagsOnBombs = table.Column<int>(type: "int", nullable: false),
                     timeSpentSum = table.Column<int>(type: "int", nullable: false),
-                    averageTime = table.Column<int>(type: "int", nullable: false),
                     lastGameData = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     lastGameTime = table.Column<int>(type: "int", nullable: false)
                 },
@@ -116,16 +84,37 @@ namespace MS_Back_Maps.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_CustomMapsInUsers_customMapID",
-                table: "CustomMapsInUsers",
-                column: "customMapID");
+            migrationBuilder.CreateTable(
+                name: "CustomMapsInUsers",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    mapsInUsersMapID = table.Column<int>(type: "int", nullable: false),
+                    isAdded = table.Column<bool>(type: "bit", nullable: false),
+                    isFavourite = table.Column<bool>(type: "bit", nullable: false),
+                    rate = table.Column<int>(type: "int", nullable: false),
+                    MapsInUserId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomMapsInUsers", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_CustomMapsInUsers_MapsInUsers_MapsInUserId",
+                        column: x => x.MapsInUserId,
+                        principalTable: "MapsInUsers",
+                        principalColumn: "id");
+                });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomMapsInUsers_userID_customMapID",
+                name: "IX_CustomMaps_mapID",
+                table: "CustomMaps",
+                column: "mapID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomMapsInUsers_MapsInUserId",
                 table: "CustomMapsInUsers",
-                columns: new[] { "userID", "customMapID" },
-                unique: true);
+                column: "MapsInUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MapsInUsers_mapID",
@@ -133,9 +122,9 @@ namespace MS_Back_Maps.Migrations
                 column: "mapID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MapsInUsers_userID_mapID",
+                name: "IX_MapsInUsers_playerID_mapID",
                 table: "MapsInUsers",
-                columns: new[] { "userID", "mapID" },
+                columns: new[] { "playerID", "mapID" },
                 unique: true);
         }
 
@@ -143,13 +132,13 @@ namespace MS_Back_Maps.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "CustomMaps");
+
+            migrationBuilder.DropTable(
                 name: "CustomMapsInUsers");
 
             migrationBuilder.DropTable(
                 name: "MapsInUsers");
-
-            migrationBuilder.DropTable(
-                name: "CustomMaps");
 
             migrationBuilder.DropTable(
                 name: "Maps");

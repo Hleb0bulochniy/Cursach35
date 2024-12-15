@@ -37,22 +37,22 @@
             <response code="401">Invalid or missing token, the password doesn't match. Returns message about error</response>
             <response code="404">The user wasn't found. Returns message about error</response>
         </member>
-        <member name="M:MS_Back_Auth.Controllers.AuthController.UserIdCheck(System.Nullable{System.Int32})">
+        <member name="M:MS_Back_Auth.Controllers.AuthController.UserIdCheck(MS_Back_Auth.UserIdCheckModel)">
             <summary>
             Check if user exists.
             </summary>
             <remarks>If user exists, it sends confirmation and his username. If user doesn't exists or recieved data is wrong, it sends denial</remarks>
         </member>
-        <member name="T:MS_Back_Auth.Migrations.First_migration">
+        <member name="T:MS_Back_Auth.Migrations.Second_Migration">
             <inheritdoc />
         </member>
-        <member name="M:MS_Back_Auth.Migrations.First_migration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:MS_Back_Auth.Migrations.Second_Migration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:MS_Back_Auth.Migrations.First_migration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:MS_Back_Auth.Migrations.Second_Migration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:MS_Back_Auth.Migrations.First_migration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+        <member name="M:MS_Back_Auth.Migrations.Second_Migration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
     </members>

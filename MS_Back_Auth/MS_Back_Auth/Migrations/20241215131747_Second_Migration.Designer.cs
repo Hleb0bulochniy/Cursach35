@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MS_Back_Auth.Migrations
 {
     [DbContext(typeof(AuthContext))]
-    [Migration("20241210123803_First_migration")]
-    partial class First_migration
+    [Migration("20241215131747_Second_Migration")]
+    partial class Second_Migration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,10 @@ namespace MS_Back_Auth.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CreatorId")
+                        .HasColumnType("int")
+                        .HasColumnName("creatorId");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -43,12 +47,24 @@ namespace MS_Back_Auth.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("password");
 
+                    b.Property<int?>("PlayerId")
+                        .HasColumnType("int")
+                        .HasColumnName("playerId");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("username");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatorId")
+                        .IsUnique()
+                        .HasFilter("[creatorId] IS NOT NULL");
+
+                    b.HasIndex("PlayerId")
+                        .IsUnique()
+                        .HasFilter("[playerId] IS NOT NULL");
 
                     b.ToTable("Users");
                 });

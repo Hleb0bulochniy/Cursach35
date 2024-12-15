@@ -4,20 +4,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MS_Back_Maps.Models
 {
-    [Index(nameof(UserId), nameof(MapId), IsUnique = true)]
+    [Index(nameof(PlayerId), nameof(MapId), IsUnique = true)]
     public class MapsInUser
     {
         [Key]
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("userID")]
-        public int UserId { get; set; }
-
         public Map Map { get; set; } = null!;
 
         [Column("mapID")]
         public int MapId { get; set; }
+
+        [Column("playerID")]
+        public int PlayerId { get; set; }
 
         [Column("gamesSum")]
         public int GamesSum { get; set; }
@@ -46,13 +46,12 @@ namespace MS_Back_Maps.Models
         [Column("timeSpentSum")]
         public int TimeSpentSum { get; set; }
 
-        [Column("averageTime")]
-        public int AverageTime { get; set; }
-
         [Column("lastGameData")]
         public string LastGameData { get; set; }
 
         [Column("lastGameTime")]
         public int LastGameTime { get; set; }
+
+        public ICollection<CustomMapsInUser> CustomMapsInUser { get; set; } = null!;
     }
 }

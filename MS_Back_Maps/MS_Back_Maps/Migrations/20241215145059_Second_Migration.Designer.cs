@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MS_Back_Maps.Migrations
 {
     [DbContext(typeof(MapsContext))]
-    [Migration("20241210124257_First_migration")]
-    partial class First_migration
+    [Migration("20241215145059_Second_Migration")]
+    partial class Second_Migration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,15 +34,6 @@ namespace MS_Back_Maps.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("About")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("about");
-
-                    b.Property<int>("BombCount")
-                        .HasColumnType("int")
-                        .HasColumnName("bombCount");
-
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("creationDate");
@@ -55,18 +46,9 @@ namespace MS_Back_Maps.Migrations
                         .HasColumnType("int")
                         .HasColumnName("downloads");
 
-                    b.Property<string>("MapName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("mapName");
-
-                    b.Property<int>("MapSize")
+                    b.Property<int>("MapId")
                         .HasColumnType("int")
-                        .HasColumnName("mapSize");
-
-                    b.Property<int>("MapType")
-                        .HasColumnType("int")
-                        .HasColumnName("mapType");
+                        .HasColumnName("mapID");
 
                     b.Property<int>("RatingCount")
                         .HasColumnType("int")
@@ -77,6 +59,8 @@ namespace MS_Back_Maps.Migrations
                         .HasColumnName("ratingSum");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MapId");
 
                     b.ToTable("CustomMaps");
                 });
@@ -90,26 +74,6 @@ namespace MS_Back_Maps.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AverageTime")
-                        .HasColumnType("int")
-                        .HasColumnName("averageTime");
-
-                    b.Property<int>("CustomMapId")
-                        .HasColumnType("int")
-                        .HasColumnName("customMapID");
-
-                    b.Property<int>("FlagsOnBombs")
-                        .HasColumnType("int")
-                        .HasColumnName("flagsOnBombs");
-
-                    b.Property<int>("FlagsSum")
-                        .HasColumnType("int")
-                        .HasColumnName("flagsSum");
-
-                    b.Property<int>("GamesSum")
-                        .HasColumnType("int")
-                        .HasColumnName("gamesSum");
-
                     b.Property<bool>("IsAdded")
                         .HasColumnType("bit")
                         .HasColumnName("isAdded");
@@ -118,53 +82,20 @@ namespace MS_Back_Maps.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("isFavourite");
 
-                    b.Property<string>("LastGameData")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("lastGameData");
+                    b.Property<int?>("MapsInUserId")
+                        .HasColumnType("int");
 
-                    b.Property<int>("LastGameTime")
+                    b.Property<int>("MapsInUsersMapId")
                         .HasColumnType("int")
-                        .HasColumnName("lastGameTime");
-
-                    b.Property<int>("Loses")
-                        .HasColumnType("int")
-                        .HasColumnName("loses");
-
-                    b.Property<int>("OpenedBlankTiles")
-                        .HasColumnType("int")
-                        .HasColumnName("openedBlankTiles");
-
-                    b.Property<int>("OpenedNumberTiles")
-                        .HasColumnType("int")
-                        .HasColumnName("openedNumberTiles");
-
-                    b.Property<int>("OpenedTiles")
-                        .HasColumnType("int")
-                        .HasColumnName("openedTiles");
+                        .HasColumnName("mapsInUsersMapID");
 
                     b.Property<int>("Rate")
                         .HasColumnType("int")
                         .HasColumnName("rate");
 
-                    b.Property<int>("TimeSpentSum")
-                        .HasColumnType("int")
-                        .HasColumnName("timeSpentSum");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
-                        .HasColumnName("userID");
-
-                    b.Property<int>("Wins")
-                        .HasColumnType("int")
-                        .HasColumnName("wins");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomMapId");
-
-                    b.HasIndex("UserId", "CustomMapId")
-                        .IsUnique();
+                    b.HasIndex("MapsInUserId");
 
                     b.ToTable("CustomMapsInUsers");
                 });
@@ -178,9 +109,18 @@ namespace MS_Back_Maps.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("About")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("about");
+
                     b.Property<int>("BombCount")
                         .HasColumnType("int")
                         .HasColumnName("bombCount");
+
+                    b.Property<bool>("IsCustom")
+                        .HasColumnType("bit")
+                        .HasColumnName("isCustom");
 
                     b.Property<string>("MapName")
                         .IsRequired()
@@ -208,10 +148,6 @@ namespace MS_Back_Maps.Migrations
                         .HasColumnName("id");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AverageTime")
-                        .HasColumnType("int")
-                        .HasColumnName("averageTime");
 
                     b.Property<int>("FlagsOnBombs")
                         .HasColumnType("int")
@@ -254,13 +190,13 @@ namespace MS_Back_Maps.Migrations
                         .HasColumnType("int")
                         .HasColumnName("openedTiles");
 
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int")
+                        .HasColumnName("playerID");
+
                     b.Property<int>("TimeSpentSum")
                         .HasColumnType("int")
                         .HasColumnName("timeSpentSum");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
-                        .HasColumnName("userID");
 
                     b.Property<int>("Wins")
                         .HasColumnType("int")
@@ -270,21 +206,26 @@ namespace MS_Back_Maps.Migrations
 
                     b.HasIndex("MapId");
 
-                    b.HasIndex("UserId", "MapId")
+                    b.HasIndex("PlayerId", "MapId")
                         .IsUnique();
 
                     b.ToTable("MapsInUsers");
                 });
 
-            modelBuilder.Entity("MS_Back_Maps.Models.CustomMapsInUser", b =>
+            modelBuilder.Entity("MS_Back_Maps.Models.CustomMap", b =>
                 {
-                    b.HasOne("MS_Back_Maps.Models.CustomMap", "CustomMap")
-                        .WithMany("CustomMapsInUser")
-                        .HasForeignKey("CustomMapId")
+                    b.HasOne("MS_Back_Maps.Models.Map", null)
+                        .WithMany("CustomMaps")
+                        .HasForeignKey("MapId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
 
-                    b.Navigation("CustomMap");
+            modelBuilder.Entity("MS_Back_Maps.Models.CustomMapsInUser", b =>
+                {
+                    b.HasOne("MS_Back_Maps.Models.MapsInUser", null)
+                        .WithMany("CustomMapsInUser")
+                        .HasForeignKey("MapsInUserId");
                 });
 
             modelBuilder.Entity("MS_Back_Maps.Models.MapsInUser", b =>
@@ -298,14 +239,16 @@ namespace MS_Back_Maps.Migrations
                     b.Navigation("Map");
                 });
 
-            modelBuilder.Entity("MS_Back_Maps.Models.CustomMap", b =>
-                {
-                    b.Navigation("CustomMapsInUser");
-                });
-
             modelBuilder.Entity("MS_Back_Maps.Models.Map", b =>
                 {
+                    b.Navigation("CustomMaps");
+
                     b.Navigation("MapsInUsers");
+                });
+
+            modelBuilder.Entity("MS_Back_Maps.Models.MapsInUser", b =>
+                {
+                    b.Navigation("CustomMapsInUser");
                 });
 #pragma warning restore 612, 618
         }
