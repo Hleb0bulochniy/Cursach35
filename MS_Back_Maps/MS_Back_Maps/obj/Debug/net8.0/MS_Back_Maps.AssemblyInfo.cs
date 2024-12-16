@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MS_Back_Maps")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+56be04d297834443de57075a8daecc8923781389")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+de3ed85d168a1cd7a2d3dd0ba2236de423a98b3e")]
 [assembly: System.Reflection.AssemblyProductAttribute("MS_Back_Maps")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MS_Back_Maps")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

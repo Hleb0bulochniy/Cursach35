@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MS_Back_Maps.Migrations
 {
     [DbContext(typeof(MapsContext))]
-    [Migration("20241215145059_Second_Migration")]
+    [Migration("20241215222145_Second_Migration")]
     partial class Second_Migration
     {
         /// <inheritdoc />
@@ -82,12 +82,9 @@ namespace MS_Back_Maps.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("isFavourite");
 
-                    b.Property<int?>("MapsInUserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MapsInUsersMapId")
+                    b.Property<int>("MapsInUserId")
                         .HasColumnType("int")
-                        .HasColumnName("mapsInUsersMapID");
+                        .HasColumnName("mapsInUserID");
 
                     b.Property<int>("Rate")
                         .HasColumnType("int")
@@ -129,11 +126,11 @@ namespace MS_Back_Maps.Migrations
 
                     b.Property<int>("MapSize")
                         .HasColumnType("int")
-                        .HasColumnName("mapType");
+                        .HasColumnName("mapSize");
 
                     b.Property<int>("MapType")
                         .HasColumnType("int")
-                        .HasColumnName("mapSize");
+                        .HasColumnName("mapType");
 
                     b.HasKey("Id");
 
@@ -225,7 +222,9 @@ namespace MS_Back_Maps.Migrations
                 {
                     b.HasOne("MS_Back_Maps.Models.MapsInUser", null)
                         .WithMany("CustomMapsInUser")
-                        .HasForeignKey("MapsInUserId");
+                        .HasForeignKey("MapsInUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MS_Back_Maps.Models.MapsInUser", b =>

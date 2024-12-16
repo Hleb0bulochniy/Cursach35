@@ -10,8 +10,8 @@ namespace MS_Back_Maps.Models
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("mapsInUsersMapID")]
-        public int MapsInUsersMapId { get; set; }
+        [Column("mapsInUserID")]
+        public int MapsInUserId { get; set; }
 
         [Column("isAdded")]
         public bool IsAdded { get; set; }

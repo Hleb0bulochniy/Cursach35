@@ -66,7 +66,7 @@ namespace MS_Back_Maps.Controllers
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUsersMapId == mapsInUser.Id);
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUserId == mapsInUser.Id);
                 var (success4, result4) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success4) return result4!;
 
@@ -135,7 +135,7 @@ namespace MS_Back_Maps.Controllers
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUsersMapId == mapsInUser.Id);
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUserId == mapsInUser.Id);
                 var (success4, result4) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success4) return result4!;
 
@@ -204,7 +204,7 @@ namespace MS_Back_Maps.Controllers
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUsersMapId == mapsInUser.Id);
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUserId == mapsInUser.Id);
                 var (success4, result4) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success4) return result4!;
 
@@ -297,14 +297,14 @@ namespace MS_Back_Maps.Controllers
 
                     await _context.SaveChangesAsync(); 
                 }
-                customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUsersMapId == mapsInUser.Id);
+                customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUserId == mapsInUser.Id);
 
                 if (customMapsInUser == null)
                 {
 
                     CustomMapsInUser customMapsInUserNew = new CustomMapsInUser
                     {
-                        MapsInUsersMapId = mapsInUser.Id,
+                        MapsInUserId = mapsInUser.Id,
                         IsAdded = true,
                         IsFavourite = false,
                         Rate = 0
@@ -380,7 +380,7 @@ namespace MS_Back_Maps.Controllers
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUsersMapId == mapsInUser.Id);
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUserId == mapsInUser.Id);
                 var (success4, result4) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success4) return result4!;
 
@@ -444,7 +444,7 @@ namespace MS_Back_Maps.Controllers
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUsersMapId == mapsInUser.Id);
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUserId == mapsInUser.Id);
                 var (success4, result4) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success4) return result4!;
 
@@ -503,7 +503,7 @@ namespace MS_Back_Maps.Controllers
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
-                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUsersMapId == mapsInUser.Id);
+                CustomMapsInUser? customMapsInUser = _context.CustomMapsInUsers.FirstOrDefault(cmap => cmap.MapsInUserId == mapsInUser.Id);
                 var (success4, result4) = await CustomMapsInUserNullCheck(customMapsInUser, logModel);
                 if (!success4) return result4!;
 

@@ -19,8 +19,8 @@ namespace MS_Back_Maps.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     mapName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     bombCount = table.Column<int>(type: "int", nullable: false),
-                    mapSize = table.Column<int>(type: "int", nullable: false),
                     mapType = table.Column<int>(type: "int", nullable: false),
+                    mapSize = table.Column<int>(type: "int", nullable: false),
                     isCustom = table.Column<bool>(type: "bit", nullable: false),
                     about = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
@@ -90,20 +90,20 @@ namespace MS_Back_Maps.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    mapsInUsersMapID = table.Column<int>(type: "int", nullable: false),
+                    mapsInUserID = table.Column<int>(type: "int", nullable: false),
                     isAdded = table.Column<bool>(type: "bit", nullable: false),
                     isFavourite = table.Column<bool>(type: "bit", nullable: false),
-                    rate = table.Column<int>(type: "int", nullable: false),
-                    MapsInUserId = table.Column<int>(type: "int", nullable: true)
+                    rate = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CustomMapsInUsers", x => x.id);
                     table.ForeignKey(
-                        name: "FK_CustomMapsInUsers_MapsInUsers_MapsInUserId",
-                        column: x => x.MapsInUserId,
+                        name: "FK_CustomMapsInUsers_MapsInUsers_mapsInUserID",
+                        column: x => x.mapsInUserID,
                         principalTable: "MapsInUsers",
-                        principalColumn: "id");
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -112,9 +112,9 @@ namespace MS_Back_Maps.Migrations
                 column: "mapID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomMapsInUsers_MapsInUserId",
+                name: "IX_CustomMapsInUsers_mapsInUserID",
                 table: "CustomMapsInUsers",
-                column: "MapsInUserId");
+                column: "mapsInUserID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MapsInUsers_mapID",

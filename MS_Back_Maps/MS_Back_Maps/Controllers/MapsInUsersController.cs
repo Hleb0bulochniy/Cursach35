@@ -214,7 +214,8 @@ namespace MS_Back_Maps.Controllers
                 }
 
                 var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
-                if (result.logLevel == "Error") return BadRequest(logModel.message);
+                if (result.errorCode == "401") return Unauthorized(logModel.message);
+                else if (result.logLevel == "Error") return BadRequest(logModel.message);
                 logModel.userId = parsedUserId;
 
                 UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
@@ -303,7 +304,8 @@ namespace MS_Back_Maps.Controllers
             try
             {
                 var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
-                if (result.logLevel == "Error") return BadRequest(logModel.message);
+                if (result.errorCode == "401") return Unauthorized(logModel.message);
+                else if (result.logLevel == "Error") return BadRequest(logModel.message);
                 logModel.userId = parsedUserId;
 
                 UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
