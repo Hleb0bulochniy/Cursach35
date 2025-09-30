@@ -1,0 +1,122 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|d:\\university\\cursachrefactoring\\ms_back_maps\\ms_back_maps\\classes.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|solutionrelative:ms_back_maps\\classes.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|d:\\university\\cursachrefactoring\\ms_back_maps\\ms_back_maps\\helpfuncs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|solutionrelative:ms_back_maps\\helpfuncs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|d:\\university\\cursachrefactoring\\ms_back_maps\\ms_back_maps\\controllers\\custommapscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|solutionrelative:ms_back_maps\\controllers\\custommapscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|d:\\university\\cursachrefactoring\\ms_back_maps\\ms_back_maps\\controllers\\custommapsinuserscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|solutionrelative:ms_back_maps\\controllers\\custommapsinuserscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|d:\\university\\cursachrefactoring\\ms_back_maps\\ms_back_maps\\controllers\\mapscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|solutionrelative:ms_back_maps\\controllers\\mapscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|d:\\university\\cursachrefactoring\\ms_back_maps\\ms_back_maps\\controllers\\mapsinuserscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9016EA83-0006-47EB-BA08-E6190EDAD7D2}|MS_Back_Maps\\MS_Back_Maps.csproj|solutionrelative:ms_back_maps\\controllers\\mapsinuserscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Classes.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Classes.cs",
+              "RelativeDocumentMoniker": "MS_Back_Maps\\Classes.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Classes.cs",
+              "RelativeToolTip": "MS_Back_Maps\\Classes.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAAAAD8AAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-29T09:33:45.845Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "HelpFuncs.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\HelpFuncs.cs",
+              "RelativeDocumentMoniker": "MS_Back_Maps\\HelpFuncs.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\HelpFuncs.cs",
+              "RelativeToolTip": "MS_Back_Maps\\HelpFuncs.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAWwIAAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-29T09:18:30.011Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "MapsInUsersController.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Controllers\\MapsInUsersController.cs",
+              "RelativeDocumentMoniker": "MS_Back_Maps\\Controllers\\MapsInUsersController.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Controllers\\MapsInUsersController.cs",
+              "RelativeToolTip": "MS_Back_Maps\\Controllers\\MapsInUsersController.cs",
+              "ViewState": "AgIAAOAAAAAAAAAAAAAAAEkBAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-29T09:03:22.103Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MapsController.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Controllers\\MapsController.cs",
+              "RelativeDocumentMoniker": "MS_Back_Maps\\Controllers\\MapsController.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Controllers\\MapsController.cs",
+              "RelativeToolTip": "MS_Back_Maps\\Controllers\\MapsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-29T09:03:21.402Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CustomMapsInUsersController.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Controllers\\CustomMapsInUsersController.cs",
+              "RelativeDocumentMoniker": "MS_Back_Maps\\Controllers\\CustomMapsInUsersController.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Controllers\\CustomMapsInUsersController.cs",
+              "RelativeToolTip": "MS_Back_Maps\\Controllers\\CustomMapsInUsersController.cs",
+              "ViewState": "AgIAAOYBAAAAAAAAAAAIwPQBAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-29T09:03:20.742Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "CustomMapsController.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Controllers\\CustomMapsController.cs",
+              "RelativeDocumentMoniker": "MS_Back_Maps\\Controllers\\CustomMapsController.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Maps\\MS_Back_Maps\\Controllers\\CustomMapsController.cs",
+              "RelativeToolTip": "MS_Back_Maps\\Controllers\\CustomMapsController.cs",
+              "ViewState": "AgIAAKMAAAAAAAAAAAAAwKsAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-29T09:00:44.471Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

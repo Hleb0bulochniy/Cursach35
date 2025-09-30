@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using MS_Back_Maps.Data;
+using MS_Back_Maps.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
@@ -43,18 +43,18 @@ namespace MS_Back_Maps
             (userId, playerId, creatorId) = GetUserIdFromToken(request);
             if (string.IsNullOrEmpty(userId))
             {
-                logModel.logLevel = "Error";
-                logModel.message = "Invalid or missing token";
-                logModel.errorCode = "401";
+                logModel.LogLevel = "Error";
+                logModel.Message = "Invalid or missing token";
+                logModel.ErrorCode = "401";
                 await LogEventAsync(logModel);
                 return (logModel, -1, null, null);
             }
 
             if (!int.TryParse(userId, out int parsedUserId))
             {
-                logModel.logLevel = "Error";
-                logModel.message = "User ID conversion in int failed";
-                logModel.errorCode = "400";
+                logModel.LogLevel = "Error";
+                logModel.Message = "User ID conversion in int failed";
+                logModel.ErrorCode = "400";
                 await LogEventAsync(logModel);
                 return (logModel, -1, null, null);
             }
@@ -77,10 +77,10 @@ namespace MS_Back_Maps
 
         public async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
         {
-            logModel.logLevel = "Error";
-            logModel.message = "Server error";
-            logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
-            logModel.errorCode = "400";
+            logModel.LogLevel = "Error";
+            logModel.Message = "Server error";
+            logModel.Details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
+            logModel.ErrorCode = "500";
             await LogEventAsync(logModel);
             return logModel;
         }
@@ -101,27 +101,36 @@ namespace MS_Back_Maps
             var response = await _producerService.WaitForKafkaResponseAsync(requestId, "UserIdCheckResponce", TimeSpan.FromSeconds(10));
             if (response == null)
             {
-                logModel.logLevel = "Error";
-                logModel.message = "User does not exist";
-                logModel.errorCode = "404";
+                logModel.LogLevel = "Error";
+                logModel.Message = "User does not exist";
+                logModel.ErrorCode = "404";
                 await LogEventAsync(logModel);
             }
             return (response,logModel);
         }
 
-        public LogModel LogModelCreate(string eventType, string message)
+        public LogModel LogModelCreate(string eventType, string message, string serviceName)
         {
             return new LogModel
             {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "MapsInUsersController",
-                logLevel = "Info",
-                eventType = eventType,
-                message = message,
-                details = "",
-                errorCode = "200"
+                UserId = -1,
+                DateTime = DateTime.UtcNow,
+                ServiceName = serviceName,
+                LogLevel = "Info",
+                EventType = eventType,
+                Message = message,
+                Details = "",
+                ErrorCode = "200"
             };
+        }
+
+        public async Task<ResponseDTO> LogModelErrorInputAndLog(LogModel logModel, string message, string errorCode)
+        {
+            logModel.LogLevel = "Error";
+            logModel.Message = message;
+            logModel.ErrorCode = errorCode;
+            await LogEventAsync(logModel);
+            return new ResponseDTO(message);
         }
     }
 }

@@ -1,15 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MS_Back_Maps.Models;
-using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Security.Cryptography;
 using MS_Back_Maps.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using static Azure.Core.HttpHeader;
 
 namespace MS_Back_Maps.Controllers
 {
@@ -36,85 +30,80 @@ namespace MS_Back_Maps.Controllers
         /// <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found. Returns message about error</response>
+        /// <response code="500">Server error</response>
         [Route("Progress")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> ProgressPost([FromBody] MapSaveModel? mapSaveModel)
+        public async Task<IActionResult> ProgressPost([FromBody] MapSaveModelDTO? mapSaveModel)
         {
-            LogModel logModel = _helpfuncs.LogModelCreate("ProgressPost", "Progress was posted");
+            LogModel logModel = _helpfuncs.LogModelCreate("ProgressPost", "Progress was posted", nameof(MapsInUsersController));
             try
             {
                 if (mapSaveModel == null)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Received data is null";
-                    logModel.errorCode = "400";
-                    await _helpfuncs.LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
+                    ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is null", "400");
+                    return BadRequest(responseDTO);
                 }
 
                 var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
-                if(result.logLevel == "Error") return BadRequest(logModel.message);
-                logModel.userId = parsedUserId;
+                if (result.ErrorCode == "401") return Unauthorized(new ResponseDTO(logModel.Message));
+                if (result.LogLevel == "Error") return BadRequest(new ResponseDTO(logModel.Message));
+                logModel.UserId = parsedUserId;
 
                 UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
                 string requestId = Guid.NewGuid().ToString();
                 (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "player", logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
-                if (logModel.errorCode == "404") return NotFound(logModel.message);
+                if (logModel.ErrorCode == "404") return NotFound(new ResponseDTO(logModel.Message));
 
-                Map? map = _context.Maps.FirstOrDefault(map => ((map.Id == mapSaveModel.mapId)));
+                Map? map = await _context.Maps.FirstOrDefaultAsync(map => ((map.Id == mapSaveModel.MapId)));
                 var (success2, result2) = await MapNullCheck(map, logModel);
                 if (!success2) return result2!;
 
-                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.MapId == mapSaveModel.mapId) && (map.PlayerId == userIdCheckModel.playerId));
-                Console.WriteLine("1");
+                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(map => (map.MapId == mapSaveModel.MapId) && (map.PlayerId == userIdCheckModel.playerId));
                 if (mapsInUser == null)
                 {
-                    Console.WriteLine("2");
-                    logModel.message = "Progress was added";
+                    logModel.Message = "Progress was added";
                     MapsInUser mapsInUserInput = new MapsInUser
                     {
-                        MapId = mapSaveModel.mapId,
+                        MapId = mapSaveModel.MapId,
                         PlayerId = (int)userIdCheckModel.playerId,
-                        GamesSum = mapSaveModel.gamesSum,
-                        Wins = mapSaveModel.wins,
-                        Loses = mapSaveModel.loses,
-                        OpenedTiles = mapSaveModel.openedTiles,
-                        OpenedNumberTiles = mapSaveModel.openedNumberTiles,
-                        OpenedBlankTiles = mapSaveModel.openedBlankTiles,
-                        FlagsSum = mapSaveModel.flagsSum,
-                        FlagsOnBombs = mapSaveModel.flagsOnBombs,
-                        TimeSpentSum = mapSaveModel.timeSpentSum,
-                        LastGameData = mapSaveModel.lastGameData,
-                        LastGameTime = mapSaveModel.lastGameTime
+                        GamesSum = mapSaveModel.GamesSum,
+                        Wins = mapSaveModel.Wins,
+                        Loses = mapSaveModel.Loses,
+                        OpenedTiles = mapSaveModel.OpenedTiles,
+                        OpenedNumberTiles = mapSaveModel.OpenedNumberTiles,
+                        OpenedBlankTiles = mapSaveModel.OpenedBlankTiles,
+                        FlagsSum = mapSaveModel.FlagsSum,
+                        FlagsOnBombs = mapSaveModel.FlagsOnBombs,
+                        TimeSpentSum = mapSaveModel.TimeSpentSum,
+                        LastGameData = mapSaveModel.LastGameData,
+                        LastGameTime = mapSaveModel.LastGameTime
                     };
-                    Console.WriteLine("3");
                     await _context.MapsInUsers.AddAsync(mapsInUserInput);
                 }
                 else
                 {
-                    mapsInUser.MapId = mapSaveModel.mapId;
-                    mapsInUser.GamesSum = mapSaveModel.gamesSum;
-                    mapsInUser.Wins = mapSaveModel.wins;
-                    mapsInUser.Loses = mapSaveModel.loses;
-                    mapsInUser.OpenedTiles = mapSaveModel.openedTiles;
-                    mapsInUser.OpenedNumberTiles = mapSaveModel.openedNumberTiles;
-                    mapsInUser.OpenedBlankTiles = mapSaveModel.openedBlankTiles;
-                    mapsInUser.FlagsSum = mapSaveModel.flagsSum;
-                    mapsInUser.FlagsOnBombs = mapSaveModel.flagsOnBombs;
-                    mapsInUser.TimeSpentSum = mapSaveModel.timeSpentSum;
-                    mapsInUser.LastGameData = mapSaveModel.lastGameData;
-                    mapsInUser.LastGameTime = mapSaveModel.lastGameTime;
+                    mapsInUser.MapId = mapSaveModel.MapId;
+                    mapsInUser.GamesSum = mapSaveModel.GamesSum;
+                    mapsInUser.Wins = mapSaveModel.Wins;
+                    mapsInUser.Loses = mapSaveModel.Loses;
+                    mapsInUser.OpenedTiles = mapSaveModel.OpenedTiles;
+                    mapsInUser.OpenedNumberTiles = mapSaveModel.OpenedNumberTiles;
+                    mapsInUser.OpenedBlankTiles = mapSaveModel.OpenedBlankTiles;
+                    mapsInUser.FlagsSum = mapSaveModel.FlagsSum;
+                    mapsInUser.FlagsOnBombs = mapSaveModel.FlagsOnBombs;
+                    mapsInUser.TimeSpentSum = mapSaveModel.TimeSpentSum;
+                    mapsInUser.LastGameData = mapSaveModel.LastGameData;
+                    mapsInUser.LastGameTime = mapSaveModel.LastGameTime;
                 }
-                Console.WriteLine("4");
                 await _context.SaveChangesAsync();
                 await _helpfuncs.LogEventAsync(logModel);
-                return Ok(logModel.message);
+                return Ok(new ResponseDTO(logModel.Message));
             }
             catch (Exception ex)
             {
                 LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
-                return BadRequest(updatedLogModel.message);
+                return BadRequest(new ResponseDTO(updatedLogModel.Message));
             }
         }
 
@@ -126,64 +115,64 @@ namespace MS_Back_Maps.Controllers
         /// <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
+        /// <response code="500">Server error</response>
         [Route("Progress/{idModel:int}")]
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> ProgressGet(int? idModel)
         {
-            LogModel logModel = _helpfuncs.LogModelCreate("ProgressGet", "Progress was gotten");
+            LogModel logModel = _helpfuncs.LogModelCreate("ProgressGet", "Progress was gotten", nameof(MapsInUsersController));
             try
             {
                 if (idModel <= 0 || idModel == null)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Received data is wrong";
-                    logModel.errorCode = "400";
-                    await _helpfuncs.LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
+                    ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is wrong", "400");
+                    return BadRequest(responseDTO);
                 }
 
                 var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
-                if (result.logLevel == "Error") return BadRequest(logModel.message);
-                logModel.userId = parsedUserId;
+                if (result.ErrorCode == "401") return Unauthorized(new ResponseDTO(logModel.Message));
+                if (result.LogLevel == "Error") return BadRequest(new ResponseDTO(logModel.Message));
+                logModel.UserId = parsedUserId;
 
                 UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
                 string requestId = Guid.NewGuid().ToString();
                 (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "player", logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
-                if (logModel.errorCode == "404") return NotFound(logModel.message);
+                if (logModel.ErrorCode == "404") return NotFound(new ResponseDTO(logModel.Message));
 
-                Map? map = _context.Maps.FirstOrDefault(map => ((map.Id == idModel)));
+                Map? map = await _context.Maps.AsNoTracking().FirstOrDefaultAsync(map => ((map.Id == idModel)));
                 var (success2, result2) = await MapNullCheck(map, logModel);
                 if (!success2) return result2!;
 
-                MapsInUser? mapsInUser = _context.MapsInUsers.FirstOrDefault(map => (map.MapId == idModel) && (map.PlayerId == userIdCheckModel.playerId));
+                MapsInUser? mapsInUser = await _context.MapsInUsers.AsNoTracking().FirstOrDefaultAsync(map => (map.MapId == idModel) && (map.PlayerId == userIdCheckModel.playerId));
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
-                MapSaveModel mapSaveModel = new MapSaveModel
+                MapSaveModelDTO mapSaveModelDTO = new MapSaveModelDTO
                 {
-                    id = mapsInUser.Id,
-                    mapId = mapsInUser.MapId,
-                    mapName = map.MapName,
-                    gamesSum = mapsInUser.GamesSum,
-                    wins = mapsInUser.Wins,
-                    loses = mapsInUser.Loses,
-                    openedTiles = mapsInUser.OpenedTiles,
-                    openedNumberTiles = mapsInUser.OpenedNumberTiles,
-                    openedBlankTiles = mapsInUser.OpenedBlankTiles,
-                    flagsSum = mapsInUser.FlagsSum,
-                    flagsOnBombs = mapsInUser.FlagsOnBombs,
-                    lastGameData = mapsInUser.LastGameData,
-                    lastGameTime = mapsInUser.LastGameTime,
+                    Id = mapsInUser.Id,
+                    MapId = mapsInUser.MapId,
+                    MapName = map.MapName,
+                    GamesSum = mapsInUser.GamesSum,
+                    Wins = mapsInUser.Wins,
+                    Loses = mapsInUser.Loses,
+                    OpenedTiles = mapsInUser.OpenedTiles,
+                    OpenedNumberTiles = mapsInUser.OpenedNumberTiles,
+                    OpenedBlankTiles = mapsInUser.OpenedBlankTiles,
+                    FlagsSum = mapsInUser.FlagsSum,
+                    FlagsOnBombs = mapsInUser.FlagsOnBombs,
+                    TimeSpentSum = mapsInUser.TimeSpentSum,
+                    LastGameData = mapsInUser.LastGameData,
+                    LastGameTime = mapsInUser.LastGameTime,
                 };
 
                 await _helpfuncs.LogEventAsync(logModel);
-                return Ok(mapSaveModel);
+                return Ok(mapSaveModelDTO);
             }
             catch (Exception ex)
             {
                 LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
-                return BadRequest(updatedLogModel.message);
+                return BadRequest(new ResponseDTO(updatedLogModel.Message));
             }
         }
 
@@ -196,77 +185,75 @@ namespace MS_Back_Maps.Controllers
         /// <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found. Returns message about error</response>
+        /// <response code="500">Server error</response>
         [Route("SaveList")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> SaveListPost([FromBody] MapSaveListModel mapSaveListModel)
+        public async Task<IActionResult> SaveListPost([FromBody] MapSaveListModelDTO mapSaveListModel)
         {
-            LogModel logModel = _helpfuncs.LogModelCreate("SaveListPost", "Save list was posted");
+            LogModel logModel = _helpfuncs.LogModelCreate("SaveListPost", "Save list was posted", nameof(MapsInUsersController));
             try
             {
-                if (mapSaveListModel.mapSaveList == null || !mapSaveListModel.mapSaveList.Any() || mapSaveListModel == null)
+                if (mapSaveListModel == null || mapSaveListModel.MapSaveList == null || !mapSaveListModel.MapSaveList.Any())
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Received data is wrong";
-                    logModel.errorCode = "400";
-                    await _helpfuncs.LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
+                    ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is wrong", "400");
+                    return BadRequest(responseDTO);
                 }
 
                 var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
-                if (result.errorCode == "401") return Unauthorized(logModel.message);
-                else if (result.logLevel == "Error") return BadRequest(logModel.message);
-                logModel.userId = parsedUserId;
+                if (result.ErrorCode == "401") return Unauthorized(new ResponseDTO(logModel.Message));
+                if (result.LogLevel == "Error") return BadRequest(new ResponseDTO(logModel.Message));
+                logModel.UserId = parsedUserId;
 
                 UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
                 string requestId = Guid.NewGuid().ToString();
                 (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "player", logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
-                if (logModel.errorCode == "404") return NotFound(logModel.message);
+                if (logModel.ErrorCode == "404") return NotFound(new ResponseDTO(logModel.Message));
 
 
-                var existingMaps = _context.MapsInUsers.Where(map => map.PlayerId == userIdCheckModel.playerId && mapSaveListModel.mapSaveList.Select(m => m.mapId).Contains(map.MapId)).ToDictionary(map => map.MapId);
+                var existingMaps = _context.MapsInUsers.Where(map => map.PlayerId == userIdCheckModel.playerId && mapSaveListModel.MapSaveList.Select(m => m.MapId).Contains(map.MapId)).ToDictionary(map => map.MapId);
                 List<MapsInUser> mapsToAdd = new List<MapsInUser>();
-                foreach ( MapSaveModel mapSaveModel in mapSaveListModel.mapSaveList )
+                foreach ( MapSaveModelDTO mapSaveModel in mapSaveListModel.MapSaveList )
                 {
-                    Map? map = _context.Maps.FirstOrDefault(map => ((map.Id == mapSaveModel.mapId)));
+                    Map? map = await _context.Maps.FirstOrDefaultAsync(map => ((map.Id == mapSaveModel.MapId)));
                     var (success2, result2) = await MapNullCheck(map, logModel);
                     if (success2)
                     {
-                        if (!existingMaps.TryGetValue(mapSaveModel.mapId, out var mapsInUser))
+                        if (!existingMaps.TryGetValue(mapSaveModel.MapId, out var mapsInUser))
                         {
                             mapsToAdd.Add(new MapsInUser
                             {
-                                MapId = mapSaveModel.mapId,
+                                MapId = mapSaveModel.MapId,
                                 PlayerId = (int)userIdCheckModel.playerId,
-                                GamesSum = mapSaveModel.gamesSum,
-                                Wins = mapSaveModel.wins,
-                                Loses = mapSaveModel.loses,
-                                OpenedTiles = mapSaveModel.openedTiles,
-                                OpenedNumberTiles = mapSaveModel.openedNumberTiles,
-                                OpenedBlankTiles = mapSaveModel.openedBlankTiles,
-                                FlagsSum = mapSaveModel.flagsSum,
-                                FlagsOnBombs = mapSaveModel.flagsOnBombs,
-                                TimeSpentSum = mapSaveModel.timeSpentSum,
-                                LastGameData = mapSaveModel.lastGameData,
-                                LastGameTime = mapSaveModel.lastGameTime
+                                GamesSum = mapSaveModel.GamesSum,
+                                Wins = mapSaveModel.Wins,
+                                Loses = mapSaveModel.Loses,
+                                OpenedTiles = mapSaveModel.OpenedTiles,
+                                OpenedNumberTiles = mapSaveModel.OpenedNumberTiles,
+                                OpenedBlankTiles = mapSaveModel.OpenedBlankTiles,
+                                FlagsSum = mapSaveModel.FlagsSum,
+                                FlagsOnBombs = mapSaveModel.FlagsOnBombs,
+                                TimeSpentSum = mapSaveModel.TimeSpentSum,
+                                LastGameData = mapSaveModel.LastGameData,
+                                LastGameTime = mapSaveModel.LastGameTime
                             });
-                            logModel.details += $"\n!ADD! Custom map id: {mapSaveModel.mapId}, user id: {userIdCheckModel.playerId};";
+                            logModel.Details += $"\n!ADD! Custom map id: {mapSaveModel.MapId}, user id: {userIdCheckModel.playerId};";
                         }
                         else
                         {
-                            mapsInUser.MapId = mapSaveModel.mapId;
-                            mapsInUser.GamesSum = mapSaveModel.gamesSum;
-                            mapsInUser.Wins = mapSaveModel.wins;
-                            mapsInUser.Loses = mapSaveModel.loses;
-                            mapsInUser.OpenedTiles = mapSaveModel.openedTiles;
-                            mapsInUser.OpenedNumberTiles = mapSaveModel.openedNumberTiles;
-                            mapsInUser.OpenedBlankTiles = mapSaveModel.openedBlankTiles;
-                            mapsInUser.FlagsSum = mapSaveModel.flagsSum;
-                            mapsInUser.FlagsOnBombs = mapSaveModel.flagsOnBombs;
-                            mapsInUser.TimeSpentSum = mapSaveModel.timeSpentSum;
-                            mapsInUser.LastGameData = mapSaveModel.lastGameData;
-                            mapsInUser.LastGameTime = mapSaveModel.lastGameTime;
-                            logModel.details += $"\n!CHANGE! Custom map id: {mapsInUser.MapId}, user id: {mapsInUser.PlayerId}, id: {mapsInUser.Id};";
+                            mapsInUser.MapId = mapSaveModel.MapId;
+                            mapsInUser.GamesSum = mapSaveModel.GamesSum;
+                            mapsInUser.Wins = mapSaveModel.Wins;
+                            mapsInUser.Loses = mapSaveModel.Loses;
+                            mapsInUser.OpenedTiles = mapSaveModel.OpenedTiles;
+                            mapsInUser.OpenedNumberTiles = mapSaveModel.OpenedNumberTiles;
+                            mapsInUser.OpenedBlankTiles = mapSaveModel.OpenedBlankTiles;
+                            mapsInUser.FlagsSum = mapSaveModel.FlagsSum;
+                            mapsInUser.FlagsOnBombs = mapSaveModel.FlagsOnBombs;
+                            mapsInUser.TimeSpentSum = mapSaveModel.TimeSpentSum;
+                            mapsInUser.LastGameData = mapSaveModel.LastGameData;
+                            mapsInUser.LastGameTime = mapSaveModel.LastGameTime;
+                            logModel.Details += $"\n!CHANGE! Custom map id: {mapsInUser.MapId}, user id: {mapsInUser.PlayerId}, id: {mapsInUser.Id};";
                         }
                     }
               
@@ -278,12 +265,12 @@ namespace MS_Back_Maps.Controllers
 
                 await _context.SaveChangesAsync();
                 await _helpfuncs.LogEventAsync(logModel);
-                return Ok(logModel.message);
+                return Ok(new ResponseDTO(logModel.Message));
             }
             catch (Exception ex)
             {
                 LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
-                return BadRequest(updatedLogModel.message);
+                return BadRequest(new ResponseDTO(updatedLogModel.Message));
             }
         }
 
@@ -295,51 +282,73 @@ namespace MS_Back_Maps.Controllers
         /// <response code="400">User ID (from token) conversion in int failed, other error (watch Logs). Returns message about error</response>
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, user's map saves weren't found. Returns message about error</response>
+        /// <response code="500">Server error</response>
         [Route("SaveList")]
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> SaveListGet()
         {
-            LogModel logModel = _helpfuncs.LogModelCreate("SaveListGet", "Save list gotten");
+            LogModel logModel = _helpfuncs.LogModelCreate("SaveListGet", "Save list gotten", nameof(MapsInUsersController));
             try
             {
                 var (result, parsedUserId, parsedPlayerId, parsedCreatorId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
-                if (result.errorCode == "401") return Unauthorized(logModel.message);
-                else if (result.logLevel == "Error") return BadRequest(logModel.message);
-                logModel.userId = parsedUserId;
+                if (result.ErrorCode == "401") return Unauthorized(new ResponseDTO(logModel.Message));
+                if (result.LogLevel == "Error") return BadRequest(new ResponseDTO(logModel.Message));
+                logModel.UserId = parsedUserId;
 
                 UserIdCheckModel userIdCheckModel = new UserIdCheckModel();
                 string requestId = Guid.NewGuid().ToString();
                 (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "player", logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
-                if (logModel.errorCode == "404") return NotFound(logModel.message);
+                if (logModel.ErrorCode == "404") return NotFound(new ResponseDTO(logModel.Message));
 
-                List<MapsInUser> maps = _context.MapsInUsers
+                List<MapsInUser> maps = await _context.MapsInUsers
                                    .Where(map => map.PlayerId == userIdCheckModel.playerId)
-                                   .ToList();
+                                   .AsNoTracking()
+                                   .ToListAsync();
+
+                var mapIds = maps.Select(m => m.MapId).Distinct().ToList();
+                var mapNames = await _context.Maps
+                                   .Where(m => mapIds.Contains(m.Id))
+                                   .ToDictionaryAsync(m => m.Id, m => m.MapName);
+
+                MapSaveListModelDTO mapSaveListModelDTO = new MapSaveListModelDTO();
+
+                foreach (MapsInUser map in maps)
+                {
+                    MapSaveModelDTO mapSaveModelDTO = new MapSaveModelDTO
+                    {
+                        Id = map.Id,
+                        MapId = map.MapId,
+                        MapName = mapNames.GetValueOrDefault(map.MapId),
+                        GamesSum = map.GamesSum,
+                        Wins = map.Wins,
+                        Loses = map.Loses,
+                        OpenedTiles = map.OpenedTiles,
+                        OpenedNumberTiles = map.OpenedNumberTiles,
+                        OpenedBlankTiles = map.OpenedBlankTiles,
+                        FlagsSum = map.FlagsSum,
+                        FlagsOnBombs = map.FlagsOnBombs,
+                        TimeSpentSum = map.TimeSpentSum,
+                        LastGameData = map.LastGameData,
+                        LastGameTime = map.LastGameTime,
+                    };
+                    mapSaveListModelDTO.MapSaveList.Add(mapSaveModelDTO);
+                }
                 if (!maps.Any())
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "There are no map saves for this user";
-                    logModel.errorCode = "404";
-                    await _helpfuncs.LogEventAsync(logModel);
-                    return NotFound(logModel.message);
+                    ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "There are no map saves for this user", "404");
+                    return NotFound(responseDTO);
                 }
 
                 await _helpfuncs.LogEventAsync(logModel);
-                return Ok(maps);
+                return Ok(mapSaveListModelDTO);
             }
             catch (Exception ex)
             {
                 LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
-                return BadRequest(updatedLogModel.message);
+                return BadRequest(new ResponseDTO(updatedLogModel.Message));
             }
         }
-
-
-
-
-
-
 
 
 
@@ -347,11 +356,8 @@ namespace MS_Back_Maps.Controllers
         {
             if (map == null)
             {
-                logModel.logLevel = "Error";
-                logModel.message = "The map doesn't exists";
-                logModel.errorCode = "404";
-                await _helpfuncs.LogEventAsync(logModel);
-                return (false, NotFound(logModel.message));
+                ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "The map doesn't exists", "404");
+                return (false, NotFound(responseDTO));
             }
             return (true, null);
         }
@@ -360,11 +366,8 @@ namespace MS_Back_Maps.Controllers
         {
             if (mapsInUser == null)
             {
-                logModel.logLevel = "Error";
-                logModel.message = "The map:user doesn't exists";
-                logModel.errorCode = "404";
-                await _helpfuncs.LogEventAsync(logModel);
-                return (false, NotFound(logModel.message));
+                ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "The map:user doesn't exists", "404");
+                return (false, NotFound(responseDTO));
             }
             return (true, null);
         }
