@@ -4,14 +4,15 @@
         <name>MS_Back_Maps</name>
     </assembly>
     <members>
-        <member name="M:MS_Back_Maps.Controllers.CustomMapsController.CustomMapPost(MS_Back_Maps.CustomMapData)">
+        <member name="M:MS_Back_Maps.Controllers.CustomMapsController.CustomMapPost(MS_Back_Maps.CustomMapDataDTO)">
             <summary>
             Add new custom map in db.
             </summary>
             <response code="200">Map was added. Returns message about completion</response>
-            <response code="400">User ID (from token) conversion in int failed, received data is null, this map already exists, other error (watch Logs). Returns message about error</response>
+            <response code="400">User ID (from token) conversion in int failed, received data is null, map name is empty, about field is too long, this map already exists, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsController.CustomMapGet(System.Nullable{System.Int32})">
             <summary>
@@ -20,6 +21,7 @@
             <response code="200">Map was found and sent. Returns json with custom map data</response>
             <response code="400">Recieved data is wrong, other error (watch Logs). Returns message about error</response>
             <response code="404">Map wasn't found, map creator wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsController.CustomMapDelete(System.Nullable{System.Int32})">
             <summary>
@@ -29,33 +31,37 @@
             <response code="400">User ID (from token) conversion in int failed, recieved data is wrong, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
-        <member name="M:MS_Back_Maps.Controllers.CustomMapsController.CustomMapPut(MS_Back_Maps.CustomMapData)">
+        <member name="M:MS_Back_Maps.Controllers.CustomMapsController.CustomMapPut(MS_Back_Maps.CustomMapDataDTO)">
             <summary>
             Change data of a custom map in db.
             </summary>
             <response code="200">Map was found and deleted. Returns message about completion</response>
-            <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
+            <response code="400">User ID (from token) conversion in int failed, received data is null, map name is empty, about field is too long, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
-        <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.RatePost(MS_Back_Maps.RateMap)">
+        <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.RatePost(MS_Back_Maps.RateMapDTO)">
             <summary>
             Send new rate on a map.
             </summary>
             <response code="200">Rate was posted. Returns message about completion</response>
-            <response code="400">User ID (from token) conversion in int failed, received data is null, the rate already exists, other error (watch Logs). Returns message about error</response>
+            <response code="400">User ID (from token) conversion in int failed, received data is wrong, the rate already exists, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
-        <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.RatePut(MS_Back_Maps.RateMap)">
+        <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.RatePut(MS_Back_Maps.RateMapDTO)">
             <summary>
             Change rate on a map.
             </summary>
             <response code="200">Rate was changed. Returns message about completion</response>
-            <response code="400">User ID (from token) conversion in int failed, received data is null, the old rate doesn't exist, other error (watch Logs). Returns message about error</response>
+            <response code="400">User ID (from token) conversion in int failed, received data is wrong, the old rate doesn't exist, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.RateDelete(System.Nullable{System.Int32})">
             <summary>
@@ -65,6 +71,7 @@
             <response code="400">User ID (from token) conversion in int failed, received data is wrong, the old rate doesn't exist, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.DownLoadPost(System.Nullable{System.Int32})">
             <summary>
@@ -75,6 +82,7 @@
             <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.DownLoadDelete(System.Nullable{System.Int32})">
             <summary>
@@ -84,6 +92,7 @@
             <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.FavouritePost(System.Nullable{System.Int32})">
             <summary>
@@ -93,6 +102,7 @@
             <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.CustomMapsInUsersController.FavouriteDelete(System.Nullable{System.Int32})">
             <summary>
@@ -102,8 +112,9 @@
             <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
-        <member name="M:MS_Back_Maps.Controllers.MapsInUsersController.ProgressPost(MS_Back_Maps.MapSaveModel)">
+        <member name="M:MS_Back_Maps.Controllers.MapsInUsersController.ProgressPost(MS_Back_Maps.MapSaveModelDTO)">
             <summary>
             Save progress of user on the map in db.
             </summary>
@@ -112,6 +123,7 @@
             <response code="400">User ID (from token) conversion in int failed, received data is null, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.MapsInUsersController.ProgressGet(System.Nullable{System.Int32})">
             <summary>
@@ -121,8 +133,9 @@
             <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
-        <member name="M:MS_Back_Maps.Controllers.MapsInUsersController.SaveListPost(MS_Back_Maps.MapSaveListModel)">
+        <member name="M:MS_Back_Maps.Controllers.MapsInUsersController.SaveListPost(MS_Back_Maps.MapSaveListModelDTO)">
             <summary>
             Save progress of user on several maps in db.
             </summary>
@@ -131,6 +144,7 @@
             <response code="400">User ID (from token) conversion in int failed, received data is wrong, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="M:MS_Back_Maps.Controllers.MapsInUsersController.SaveListGet">
             <summary>
@@ -140,6 +154,7 @@
             <response code="400">User ID (from token) conversion in int failed, other error (watch Logs). Returns message about error</response>
             <response code="401">Invalid or missing token. Returns message about error</response>
             <response code="404">User wasn't found, user's map saves weren't found. Returns message about error</response>
+            <response code="500">Server error</response>
         </member>
         <member name="T:MS_Back_Maps.Migrations.Second_Migration">
             <inheritdoc />

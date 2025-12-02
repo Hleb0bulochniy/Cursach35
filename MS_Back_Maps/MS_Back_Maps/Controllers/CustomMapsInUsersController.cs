@@ -7,7 +7,7 @@ using MS_Back_Maps.Models;
 namespace MS_Back_Maps.Controllers
 {
     [ApiController]
-    [Route("CustomMapsInUsers")]
+    [Route("api/v1/custom-maps-in-users")]
     public class CustomMapsInUsersController : ControllerBase
     {
         private readonly HelpFuncs _helpfuncs;
@@ -28,15 +28,14 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Rate")]
         [Authorize]
-        [HttpPost]
+        [HttpPost("rate")]
         public async Task<IActionResult> RatePost([FromBody] RateMapDTO? rateMap)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("RatePost", "Rate pasted", nameof(CustomMapsInUsersController));
             try
             {
-                if (rateMap == null || (rateMap.NewRate>5 ||rateMap.NewRate <0))
+                if (rateMap == null || (rateMap.NewRate>5 ||rateMap.NewRate < 1))
                 {
                     ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Received data is wrong", "400");
                     return BadRequest(responseDTO);
@@ -81,7 +80,7 @@ namespace MS_Back_Maps.Controllers
 
                 customMapsInUser.Rate = rateMap.NewRate;
                 customMap.RatingSum += rateMap.NewRate;
-                customMap.RatingCount += Math.Max(0, customMap.RatingCount + 1);
+                customMap.RatingCount = Math.Max(0, customMap.RatingCount += 1);
 
                 await _context.SaveChangesAsync();
                 await tx.CommitAsync();
@@ -104,15 +103,14 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Rate")]
         [Authorize]
-        [HttpPut]
+        [HttpPut("rate")]
         public async Task<IActionResult> RatePut([FromBody] RateMapDTO? rateMap)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("RatePut", "New rate putted", nameof(CustomMapsInUsersController));
             try
             {
-                if (rateMap == null || (rateMap.NewRate > 5 || rateMap.NewRate < 0))
+                if (rateMap == null || (rateMap.NewRate > 5 || rateMap.NewRate < 1))
                 {
                     ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Received data is wrong", "400");
                     return BadRequest(responseDTO);
@@ -181,15 +179,14 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Rate/{idModel:int}")]
         [Authorize]
-        [HttpDelete]
-        public async Task<IActionResult> RateDelete(int? idModel)
+        [HttpDelete("rate/{id:int}")]
+        public async Task<IActionResult> RateDelete(int? id)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("RateDelete", "Rate deleted", nameof(CustomMapsInUsersController));
             try
             {
-                if (idModel <= 0 || idModel == null)
+                if (id <= 0 || id == null)
                 {
                     ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is wrong", "400");
                     return BadRequest(responseDTO);
@@ -206,13 +203,13 @@ namespace MS_Back_Maps.Controllers
 
                 await using var tx = await _context.Database.BeginTransactionAsync();
 
-                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => cmap.MapId == idModel);
+                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => cmap.MapId == id);
                 if (customMap == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The custom map doesn't exists", "404"));
                 }
 
-                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == idModel && (cmap.PlayerId == userIdCheckModel.playerId));
+                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == id && (cmap.PlayerId == userIdCheckModel.playerId));
                 if (mapsInUser == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The map:user doesn't exists", "404"));
@@ -231,7 +228,7 @@ namespace MS_Back_Maps.Controllers
                 }
 
                 customMap.RatingSum -= customMapsInUser.Rate;
-                customMap.RatingCount -= 1;
+                customMap.RatingCount = Math.Max(0, customMap.RatingCount - 1);
                 customMapsInUser.Rate = 0;
 
                 await _context.SaveChangesAsync();
@@ -256,15 +253,14 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Download/{idModel:int}")]
         [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> DownLoadPost(int? idModel)
+        [HttpPost("download/{id:int}")]
+        public async Task<IActionResult> DownLoadPost(int? id)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("DownLoadPost", "Map download was posted", nameof(CustomMapsInUsersController));
             try
             {
-                if (idModel <= 0 || idModel == null)
+                if (id <= 0 || id == null)
                 {
                     ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is wrong", "400");
                     return BadRequest(responseDTO);
@@ -282,22 +278,23 @@ namespace MS_Back_Maps.Controllers
 
                 await using var tx = await _context.Database.BeginTransactionAsync();
 
-                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => ((cmap.MapId == idModel)));
+                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => ((cmap.MapId == id)));
                 if (customMap == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The custom map doesn't exists", "404"));
                 }
 
-                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == idModel && (cmap.PlayerId == userIdCheckModel.playerId));
+                
+
+                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == id && cmap.PlayerId == userIdCheckModel.playerId);
+
+                //if (mapsInUser == null)
+                //{
+                //    return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The map:user doesn't exists", "404"));
+                //}
+
                 if (mapsInUser == null)
                 {
-                    return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The map:user doesn't exists", "404"));
-                }
-
-                CustomMapsInUser? customMapsInUser = new CustomMapsInUser();
-                if (mapsInUser == null)
-                {
-
                     mapsInUser = new MapsInUser
                     {
                         PlayerId = (int)userIdCheckModel.playerId,
@@ -316,13 +313,15 @@ namespace MS_Back_Maps.Controllers
                     };
 
                     await _context.MapsInUsers.AddAsync(mapsInUser);
+                    await _context.SaveChangesAsync();
                 }
-                customMapsInUser = await _context.CustomMapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapsInUserId == mapsInUser.Id);
+
+                CustomMapsInUser? customMapsInUser = await _context.CustomMapsInUsers
+                    .FirstOrDefaultAsync(cmap => cmap.MapsInUserId == mapsInUser.Id);
 
                 if (customMapsInUser == null)
                 {
-
-                    CustomMapsInUser customMapsInUserNew = new CustomMapsInUser
+                    var customMapsInUserNew = new CustomMapsInUser
                     {
                         MapsInUserId = mapsInUser.Id,
                         IsAdded = true,
@@ -333,18 +332,14 @@ namespace MS_Back_Maps.Controllers
                     await _context.CustomMapsInUsers.AddAsync(customMapsInUserNew);
                     customMap.Downloads += 1;
                 }
+                else if (!customMapsInUser.IsAdded)
+                {
+                    customMapsInUser.IsAdded = true;
+                    customMap.Downloads += 1;
+                }
                 else
                 {
-
-                    if (customMapsInUser.IsAdded == false)
-                    {
-                        customMapsInUser.IsAdded = true;
-                        customMap.Downloads += 1;
-                    }
-                    else
-                    {
-                        logModel.Message = "The download already exists";
-                    }
+                    logModel.Message = "The download already exists";
                 }
 
 
@@ -369,15 +364,14 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Download/{idModel:int}")]
         [Authorize]
-        [HttpDelete]
-        public async Task<IActionResult> DownLoadDelete(int? idModel)
+        [HttpDelete("download/{id:int}")]
+        public async Task<IActionResult> DownLoadDelete(int? id)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("DownLoadDelete", "Map download was deleted", nameof(CustomMapsInUsersController));
             try
             {
-                if (idModel <= 0 || idModel == null)
+                if (id <= 0 || id == null)
                 {
                     ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is wrong", "400");
                     return BadRequest(responseDTO);
@@ -394,13 +388,13 @@ namespace MS_Back_Maps.Controllers
 
                 await using var tx = await _context.Database.BeginTransactionAsync();
 
-                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => cmap.MapId == idModel);
+                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => cmap.MapId == id);
                 if (customMap == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The custom map doesn't exists", "404"));
                 }
 
-                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == idModel && (cmap.PlayerId == userIdCheckModel.playerId));
+                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == id && (cmap.PlayerId == userIdCheckModel.playerId));
                 if (mapsInUser == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The map:user doesn't exists", "404"));
@@ -414,7 +408,7 @@ namespace MS_Back_Maps.Controllers
 
                 if (customMapsInUser.IsAdded)
                 {
-                    customMap.Downloads -= 1;
+                    customMap.Downloads = Math.Max(0, customMap.Downloads-1);
                     customMapsInUser.IsAdded = false;
                 }
 
@@ -440,15 +434,14 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Favourite/{idModel:int}")]
         [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> FavouritePost(int? idModel) //можно поменять так же как у downloadpost
+        [HttpPost("favourite/{id:int}")]
+        public async Task<IActionResult> FavouritePost(int? id) //можно поменять так же как у downloadpost
         {
             LogModel logModel = _helpfuncs.LogModelCreate("FavouritePost", "Map favourite mark was posted", nameof(CustomMapsInUsersController));
             try
             {
-                if (idModel <= 0 || idModel == null)
+                if (id <= 0 || id == null)
                 {
                     ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is wrong", "400");
                     return BadRequest(responseDTO);
@@ -466,13 +459,13 @@ namespace MS_Back_Maps.Controllers
 
                 await using var tx = await _context.Database.BeginTransactionAsync();
 
-                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => ((cmap.MapId == idModel)));
+                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => ((cmap.MapId == id)));
                 if (customMap == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The custom map doesn't exists", "404"));
                 }
 
-                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == idModel && (cmap.PlayerId == userIdCheckModel.playerId));
+                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == id && (cmap.PlayerId == userIdCheckModel.playerId));
                 if (mapsInUser == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The map:user doesn't exists", "404"));
@@ -508,15 +501,14 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Favourite/{idModel:int}")]
         [Authorize]
-        [HttpDelete]
-        public async Task<IActionResult> FavouriteDelete(int? idModel)
+        [HttpDelete("favourite/{id:int}")]
+        public async Task<IActionResult> FavouriteDelete(int? id)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("FavouriteDelete", "Map favourite mark was deleted", nameof(CustomMapsInUsersController));
             try
             {
-                if (idModel <= 0 || idModel == null)
+                if (id <= 0 || id == null)
                 {
                     ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is wrong", "400");
                     return BadRequest(responseDTO);
@@ -533,13 +525,13 @@ namespace MS_Back_Maps.Controllers
 
                 await using var tx = await _context.Database.BeginTransactionAsync();
 
-                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => ((cmap.MapId == idModel)));
+                CustomMap? customMap = await _context.CustomMaps.FirstOrDefaultAsync(cmap => ((cmap.MapId == id)));
                 if (customMap == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The custom map doesn't exists", "404"));
                 }
 
-                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == idModel && (cmap.PlayerId == userIdCheckModel.playerId));
+                MapsInUser? mapsInUser = await _context.MapsInUsers.FirstOrDefaultAsync(cmap => cmap.MapId == id && (cmap.PlayerId == userIdCheckModel.playerId));
                 if (mapsInUser == null)
                 {
                     return NotFound(await _helpfuncs.LogModelErrorInputAndLog(logModel, "The map:user doesn't exists", "404"));
@@ -587,7 +579,7 @@ namespace MS_Back_Maps.Controllers
         //    return (true, null);
         //}
 
-        //private async Task<(bool Success, IActionResult? Result)> CustomMapsInUserNullCheck(CustomMapsInUser? customMapsInUser, LogModel logModel)
+        //private async Task<(bool Success, IActionResult? Result)> CustomMapsInUserNullChыeck(CustomMapsInUser? customMapsInUser, LogModel logModel)
         //{
         //    if (customMapsInUser == null)
         //    {

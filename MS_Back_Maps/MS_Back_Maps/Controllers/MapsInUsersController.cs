@@ -8,7 +8,7 @@ using static Azure.Core.HttpHeader;
 namespace MS_Back_Maps.Controllers
 {
     [ApiController]
-    [Route("MapsInUsers")]
+    [Route("api/v1/maps-in-users")]
     public class MapsInUsersController : ControllerBase
     {
         private readonly HelpFuncs _helpfuncs;
@@ -31,9 +31,8 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Progress")]
         [Authorize]
-        [HttpPost]
+        [HttpPost("progress")]
         public async Task<IActionResult> ProgressPost([FromBody] MapSaveModelDTO? mapSaveModel)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("ProgressPost", "Progress was posted", nameof(MapsInUsersController));
@@ -116,15 +115,14 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, map wasn't found, user save on this map wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("Progress/{idModel:int}")]
         [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> ProgressGet(int? idModel)
+        [HttpGet("progress/{id:int}")]
+        public async Task<IActionResult> ProgressGet(int? id)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("ProgressGet", "Progress was gotten", nameof(MapsInUsersController));
             try
             {
-                if (idModel <= 0 || idModel == null)
+                if (id <= 0 || id == null)
                 {
                     ResponseDTO responseDTO = await _helpfuncs.LogModelErrorInputAndLog(logModel, "Recieved data is wrong", "400");
                     return BadRequest(responseDTO);
@@ -140,11 +138,11 @@ namespace MS_Back_Maps.Controllers
                 (userIdCheckModel, logModel) = await _helpfuncs.UserIdCheck(requestId, "player", logModel, parsedUserId, parsedPlayerId, parsedCreatorId);
                 if (logModel.ErrorCode == "404") return NotFound(new ResponseDTO(logModel.Message));
 
-                Map? map = await _context.Maps.AsNoTracking().FirstOrDefaultAsync(map => ((map.Id == idModel)));
+                Map? map = await _context.Maps.AsNoTracking().FirstOrDefaultAsync(map => ((map.Id == id)));
                 var (success2, result2) = await MapNullCheck(map, logModel);
                 if (!success2) return result2!;
 
-                MapsInUser? mapsInUser = await _context.MapsInUsers.AsNoTracking().FirstOrDefaultAsync(map => (map.MapId == idModel) && (map.PlayerId == userIdCheckModel.playerId));
+                MapsInUser? mapsInUser = await _context.MapsInUsers.AsNoTracking().FirstOrDefaultAsync(map => (map.MapId == id) && (map.PlayerId == userIdCheckModel.playerId));
                 var (success3, result3) = await MapsInUserNullCheck(mapsInUser, logModel);
                 if (!success3) return result3!;
 
@@ -186,9 +184,8 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("SaveList")]
         [Authorize]
-        [HttpPost]
+        [HttpPost("SaveList")]
         public async Task<IActionResult> SaveListPost([FromBody] MapSaveListModelDTO mapSaveListModel)
         {
             LogModel logModel = _helpfuncs.LogModelCreate("SaveListPost", "Save list was posted", nameof(MapsInUsersController));
@@ -211,52 +208,68 @@ namespace MS_Back_Maps.Controllers
                 if (logModel.ErrorCode == "404") return NotFound(new ResponseDTO(logModel.Message));
 
 
-                var existingMaps = _context.MapsInUsers.Where(map => map.PlayerId == userIdCheckModel.playerId && mapSaveListModel.MapSaveList.Select(m => m.MapId).Contains(map.MapId)).ToDictionary(map => map.MapId);
+                //var existingMaps = _context.MapsInUsers.Where(map => map.PlayerId == userIdCheckModel.playerId && mapSaveListModel.MapSaveList.Select(m => m.MapId).Contains(map.MapId)).ToDictionary(map => map.MapId);
+
+                var targetMapIds = mapSaveListModel.MapSaveList
+                    .Select(m => m.MapId)
+                    .Distinct()
+                    .ToList();
+
+                var existingMaps = await _context.MapsInUsers
+                    .Where(m => m.PlayerId == userIdCheckModel.playerId && targetMapIds.Contains(m.MapId))
+                    .ToDictionaryAsync(m => m.MapId);
+
+                var mapsDict = await _context.Maps
+                    .Where(m => targetMapIds.Contains(m.Id))
+                    .ToDictionaryAsync(m => m.Id);
+
                 List<MapsInUser> mapsToAdd = new List<MapsInUser>();
                 foreach ( MapSaveModelDTO mapSaveModel in mapSaveListModel.MapSaveList )
                 {
-                    Map? map = await _context.Maps.FirstOrDefaultAsync(map => ((map.Id == mapSaveModel.MapId)));
-                    var (success2, result2) = await MapNullCheck(map, logModel);
-                    if (success2)
+                    //Map? map = await _context.Maps.FirstOrDefaultAsync(map => ((map.Id == mapSaveModel.MapId)));
+                    //var (success2, result2) = await MapNullCheck(map, logModel);
+                    if (!mapsDict.TryGetValue(mapSaveModel.MapId, out var mapEntity))
                     {
-                        if (!existingMaps.TryGetValue(mapSaveModel.MapId, out var mapsInUser))
-                        {
-                            mapsToAdd.Add(new MapsInUser
-                            {
-                                MapId = mapSaveModel.MapId,
-                                PlayerId = (int)userIdCheckModel.playerId,
-                                GamesSum = mapSaveModel.GamesSum,
-                                Wins = mapSaveModel.Wins,
-                                Loses = mapSaveModel.Loses,
-                                OpenedTiles = mapSaveModel.OpenedTiles,
-                                OpenedNumberTiles = mapSaveModel.OpenedNumberTiles,
-                                OpenedBlankTiles = mapSaveModel.OpenedBlankTiles,
-                                FlagsSum = mapSaveModel.FlagsSum,
-                                FlagsOnBombs = mapSaveModel.FlagsOnBombs,
-                                TimeSpentSum = mapSaveModel.TimeSpentSum,
-                                LastGameData = mapSaveModel.LastGameData,
-                                LastGameTime = mapSaveModel.LastGameTime
-                            });
-                            logModel.Details += $"\n!ADD! Custom map id: {mapSaveModel.MapId}, user id: {userIdCheckModel.playerId};";
-                        }
-                        else
-                        {
-                            mapsInUser.MapId = mapSaveModel.MapId;
-                            mapsInUser.GamesSum = mapSaveModel.GamesSum;
-                            mapsInUser.Wins = mapSaveModel.Wins;
-                            mapsInUser.Loses = mapSaveModel.Loses;
-                            mapsInUser.OpenedTiles = mapSaveModel.OpenedTiles;
-                            mapsInUser.OpenedNumberTiles = mapSaveModel.OpenedNumberTiles;
-                            mapsInUser.OpenedBlankTiles = mapSaveModel.OpenedBlankTiles;
-                            mapsInUser.FlagsSum = mapSaveModel.FlagsSum;
-                            mapsInUser.FlagsOnBombs = mapSaveModel.FlagsOnBombs;
-                            mapsInUser.TimeSpentSum = mapSaveModel.TimeSpentSum;
-                            mapsInUser.LastGameData = mapSaveModel.LastGameData;
-                            mapsInUser.LastGameTime = mapSaveModel.LastGameTime;
-                            logModel.Details += $"\n!CHANGE! Custom map id: {mapsInUser.MapId}, user id: {mapsInUser.PlayerId}, id: {mapsInUser.Id};";
-                        }
+                        var (success2, _) = await MapNullCheck(null, logModel);
+                        continue;
                     }
-              
+                    if (!existingMaps.TryGetValue(mapSaveModel.MapId, out var mapsInUser))
+                    {
+                        mapsToAdd.Add(new MapsInUser
+                        {
+                            MapId = mapSaveModel.MapId,
+                            PlayerId = (int)userIdCheckModel.playerId,
+                            GamesSum = mapSaveModel.GamesSum,
+                            Wins = mapSaveModel.Wins,
+                            Loses = mapSaveModel.Loses,
+                            OpenedTiles = mapSaveModel.OpenedTiles,
+                            OpenedNumberTiles = mapSaveModel.OpenedNumberTiles,
+                            OpenedBlankTiles = mapSaveModel.OpenedBlankTiles,
+                            FlagsSum = mapSaveModel.FlagsSum,
+                            FlagsOnBombs = mapSaveModel.FlagsOnBombs,
+                            TimeSpentSum = mapSaveModel.TimeSpentSum,
+                            LastGameData = mapSaveModel.LastGameData,
+                            LastGameTime = mapSaveModel.LastGameTime
+                        });
+                        logModel.Details += $"\n!ADD! Custom map id: {mapSaveModel.MapId}, user id: {userIdCheckModel.playerId};";
+                    }
+                    else
+                    {
+                        mapsInUser.MapId = mapSaveModel.MapId;
+                        mapsInUser.GamesSum = mapSaveModel.GamesSum;
+                        mapsInUser.Wins = mapSaveModel.Wins;
+                        mapsInUser.Loses = mapSaveModel.Loses;
+                        mapsInUser.OpenedTiles = mapSaveModel.OpenedTiles;
+                        mapsInUser.OpenedNumberTiles = mapSaveModel.OpenedNumberTiles;
+                        mapsInUser.OpenedBlankTiles = mapSaveModel.OpenedBlankTiles;
+                        mapsInUser.FlagsSum = mapSaveModel.FlagsSum;
+                        mapsInUser.FlagsOnBombs = mapSaveModel.FlagsOnBombs;
+                        mapsInUser.TimeSpentSum = mapSaveModel.TimeSpentSum;
+                        mapsInUser.LastGameData = mapSaveModel.LastGameData;
+                        mapsInUser.LastGameTime = mapSaveModel.LastGameTime;
+                        logModel.Details += $"\n!CHANGE! Custom map id: {mapsInUser.MapId}, user id: {mapsInUser.PlayerId}, id: {mapsInUser.Id};";
+                    }
+
                 }
                 if (mapsToAdd.Any())
                 {
@@ -283,9 +296,8 @@ namespace MS_Back_Maps.Controllers
         /// <response code="401">Invalid or missing token. Returns message about error</response>
         /// <response code="404">User wasn't found, user's map saves weren't found. Returns message about error</response>
         /// <response code="500">Server error</response>
-        [Route("SaveList")]
         [Authorize]
-        [HttpGet]
+        [HttpGet("SaveList")]
         public async Task<IActionResult> SaveListGet()
         {
             LogModel logModel = _helpfuncs.LogModelCreate("SaveListGet", "Save list gotten", nameof(MapsInUsersController));
