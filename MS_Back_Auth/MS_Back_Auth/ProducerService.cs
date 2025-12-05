@@ -28,9 +28,9 @@ namespace MS_Back_Auth
             await _producer.ProduceAsync(topic, kafkamessage);
         }
 
-        public async Task<UserIdCheckModel?> WaitForKafkaResponseAsync(string requestId, string responseTopic, TimeSpan timeout)
+        public async Task<UserIdCheckDTO?> WaitForKafkaResponseAsync(string requestId, string responseTopic, TimeSpan timeout)
         {
-            var tcs = new TaskCompletionSource<UserIdCheckModel>();
+            var tcs = new TaskCompletionSource<UserIdCheckDTO>();
 
             using var cts = new CancellationTokenSource(timeout);
 
@@ -53,7 +53,7 @@ namespace MS_Back_Auth
                         var consumeResult = consumer.Consume(cts.Token);
                         if (consumeResult != null)
                         {
-                            var message = JsonSerializer.Deserialize<UserIdCheckModel>(consumeResult.Message.Value);
+                            var message = JsonSerializer.Deserialize<UserIdCheckDTO>(consumeResult.Message.Value);
                             if (message?.requestId == requestId)
                             {
                                 tcs.SetResult(message);

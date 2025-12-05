@@ -57,10 +57,10 @@ namespace MS_Back_Auth
 
         private async Task ProcessMessageAsync(string message)
         {
-            var request = JsonSerializer.Deserialize<UserIdCheckModel>(message);
+            var request = JsonSerializer.Deserialize<UserIdCheckDTO>(message);
             if (request == null) return;
 
-            UserIdCheckModel response = new UserIdCheckModel();
+            UserIdCheckDTO response = new UserIdCheckDTO();
 
             response = await _controller.UserIdCheck(request);
 

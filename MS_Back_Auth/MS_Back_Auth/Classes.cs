@@ -1,13 +1,13 @@
 ﻿namespace MS_Back_Auth
 {
     [System.Serializable]
-    public class RegistrationClass
+    public class RegistrationDTO
     {
         public string userName { get; set; }
         public string email { get; set; }
         public string password1 { get; set; }
         public string password2 { get; set; }
-        public RegistrationClass(string userName, string email, string password1, string password2)
+        public RegistrationDTO(string userName, string email, string password1, string password2)
         {
             this.userName = userName;
             this.email = email;
@@ -17,11 +17,11 @@
     }
 
     [System.Serializable]
-    public class LoginClass
+    public class LoginDTO
     {
         public string userName { get; set; }
         public string password { get; set; }
-        public LoginClass(string userName, string password)
+        public LoginDTO(string userName, string password)
         {
             this.userName = userName;
             this.password = password;
@@ -29,11 +29,11 @@
     }
 
     [Serializable]
-    public class PasswordClass
+    public class PasswordDTO
     {
         public string password { get; set; }
     }
-    public class TokenResponceClass
+    public class TokenResponceDTO
     {
         public string access_token { get; set; }
         public string refresh_token { get; set; }
@@ -42,7 +42,7 @@
 
     //для кафки
     [Serializable]
-    public class LogModel
+    public class LogModelDTO
     {
         public int userId { get; set; }
         public DateTime dateTime { get; set; }
@@ -55,7 +55,7 @@
     }
 
     [Serializable]
-    public class UserIdCheckModel
+    public class UserIdCheckDTO
     {
         public string requestId { get; set; }
         public string requestMessage { get; set; }

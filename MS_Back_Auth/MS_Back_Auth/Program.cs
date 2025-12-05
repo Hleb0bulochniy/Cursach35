@@ -32,7 +32,7 @@ namespace MS_Back_Auth
             builder.Services.AddSingleton<AuthContext>();
             builder.Services.AddSingleton<AuthController>();
             builder.Services.AddSingleton<ProducerService>();
-            builder.Services.AddHostedService<ConsumerService>();
+            //builder.Services.AddHostedService<ConsumerService>(); //Убрано на время, чтобы отключить кафку и использовать сваггер
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {

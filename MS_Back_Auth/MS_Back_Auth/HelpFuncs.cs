@@ -1,10 +1,24 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using MS_Back_Auth.Data;
+using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace MS_Back_Auth
 {
     public class HelpFuncs
     {
+        private readonly ProducerService _producerService;
+        private readonly AuthContext _context;
+        public HelpFuncs(ProducerService producerService, AuthContext authContext)
+        {
+            _producerService = producerService;
+            _context = authContext;
+        }
+
         public string? GetUserIdFromToken(HttpRequest request)
         {
             string? authorizationHeader = request.Headers["Authorization"];
@@ -16,6 +30,151 @@ namespace MS_Back_Auth
 
             var jwtToken = handler.ReadJwtToken(token);
             return jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+        }
+
+        public async Task<(bool Success, int ErrorCode, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModelDTO logModel)
+        {
+            string? userId = GetUserIdFromToken(request);
+            //var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "Token has no NameIdentifier claim";
+                logModel.errorCode = "401";
+                await LogEventAsync(logModel);
+                return (false, 401, - 1);
+            }
+
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                logModel.logLevel = "Error";
+                logModel.message = "User ID conversion in int failed";
+                logModel.errorCode = "400";
+                await LogEventAsync(logModel);
+                return (false, 400, - 1);
+            }
+
+            return (true, 200, parsedUserId);
+        }
+
+        public async Task LogEventAsync(LogModelDTO logModel)
+        {
+            var message = JsonSerializer.Serialize(logModel);
+            await _producerService.ProduceAsync("LogUpdates", message);
+        }
+
+        public LogModelDTO LogModelCreate(string eventType, string message)
+        {
+            return new LogModelDTO
+            {
+                userId = -1,
+                dateTime = DateTime.UtcNow,
+                serviceName = "AuthController",
+                logLevel = "Info",
+                eventType = eventType,
+                message = message,
+                details = "",
+                errorCode = "200"
+            };
+        }
+
+
+
+        public async Task<LogModelDTO> LogModelChangeForServerError(LogModelDTO logModel, Exception ex)
+        {
+            logModel.logLevel = "Error";
+            logModel.message = "Server error";
+            logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
+            logModel.errorCode = "500";
+            await LogEventAsync(logModel);
+            return logModel;
+        }
+
+
+        public bool IsPasswordValid(string password)
+        {
+            string signsForPassword = "abcdefghijklmnopqrstuvwxyz";
+            signsForPassword += signsForPassword.ToUpper();
+            signsForPassword += "1234567890";
+
+            if (string.IsNullOrWhiteSpace(password)) return false;
+            if (password.Length < 3) return false;
+            if (password.Length > 50) return false;
+            if (password.Contains(" ")) return false;
+
+            foreach (char letter in password)
+            {
+                if (!signsForPassword.Contains(letter))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public bool IsEmailValid(string email)
+        {
+            if (email.Count(c => c == '@') != 1) return false;
+            if (email.Length < 7) return false;
+            if (email.Contains(" ")) return false;
+
+            return true;
+        }
+
+        public bool IsUsernameValid(string username)
+        {
+            string signsForUsername = "abcdefghijklmnopqrstuvwxyz";
+            signsForUsername += signsForUsername.ToUpper();
+            signsForUsername += "1234567890";
+            signsForUsername += ".:^*()[]{}@!&$";
+
+            if (string.IsNullOrWhiteSpace(username)) return false;
+            if (username.Length < 2) return false;
+            if (username.Length > 50) return false;
+
+            foreach (char letter in username)
+            {
+                if (!signsForUsername.Contains(letter))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        public TokenResponceDTO CreateJWT(string userName, string userId, string playerId, string creatorId)
+        {
+            var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier,userId),
+                    new Claim("PlayerIdentifier",playerId),
+                    new Claim("CreatorIdentifier",creatorId),
+                    new Claim(ClaimTypes.Name,userName),
+                };
+
+            var jwt = new JwtSecurityToken(
+            issuer: AuthOptions.ISSUER,
+            audience: AuthOptions.AUDIENCE,
+            claims: claims,
+            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(24)),
+            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+            var jwtr = new JwtSecurityToken(
+            issuer: AuthOptions.ISSUER,
+            audience: AuthOptions.AUDIENCE,
+            claims: claims,
+            expires: DateTime.UtcNow.Add(TimeSpan.FromHours(300)),
+            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+            var encodedJwtr = new JwtSecurityTokenHandler().WriteToken(jwtr);
+            TokenResponceDTO response = new TokenResponceDTO
+            {
+                access_token = encodedJwt,
+                refresh_token = encodedJwtr,
+                username = userName,
+            };
+            return response;
         }
     }
 }
