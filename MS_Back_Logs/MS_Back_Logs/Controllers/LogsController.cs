@@ -1,17 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using static MS_Back_Logs.Data.LogsContext;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+﻿using Microsoft.AspNetCore.Mvc;
 using MS_Back_Logs.Data;
 using MS_Back_Logs.Models;
 using System.Text.Json;
-using System;
 
 namespace MS_Back_Logs.Controllers
 {
     [ApiController]
+    [Route("api/v1/logs")]
     public class LogsController : ControllerBase //Надо ли логировать логи
     {
         private readonly LogsContext _context;
@@ -24,15 +19,15 @@ namespace MS_Back_Logs.Controllers
         /// Log info.
         /// </summary>
         /// <response code="200">Info was logged. Returns message about completion</response>
-        /// <response code="400">Received data is null, other error (watch Logs). Returns message about error</response>
-        [Route("Log")]
-        //[Authorize] //сделать роль админа
-        [HttpPost]
-        public async Task<IActionResult> LogPost(string kafkaMessage)
+        // <response code="400">Received data is null, other error (watch Logs). Returns message about error</response>
+        /// <response code="500">Server error</response>
+        //[Authorize] //можно сделать роль админа
+        [HttpPost("Log")]
+        public async Task<IActionResult> LogPost([FromBody] string kafkaMessage)
         {
             try
             {
-                var logData = JsonSerializer.Deserialize<LogModel>(kafkaMessage);
+                var logData = JsonSerializer.Deserialize<LogModelDto>(kafkaMessage);
 
                 if (logData == null)
                 {
@@ -43,12 +38,12 @@ namespace MS_Back_Logs.Controllers
                 {
                     UserId = logData.userId,
                     DateTime = logData.dateTime,
-                    ServiceName = logData.serviceName.IsNullOrEmpty() ? "empty" : logData.serviceName,
-                    LogLevel = logData.logLevel.IsNullOrEmpty() ? "empty" : logData.logLevel,
-                    EventType = logData.eventType.IsNullOrEmpty() ? "empty" : logData.eventType,
-                    Message = logData.message.IsNullOrEmpty() ? "empty" : logData.message,
-                    Details = logData.details.IsNullOrEmpty() ? "empty" : logData.details,
-                    ErrorCode = logData.errorCode.IsNullOrEmpty() ? "empty" : logData.errorCode
+                    ServiceName = string.IsNullOrWhiteSpace(logData.serviceName) ? "empty" : logData.serviceName,
+                    LogLevel = string.IsNullOrWhiteSpace(logData.logLevel) ? "empty" : logData.logLevel,
+                    EventType = string.IsNullOrWhiteSpace(logData.eventType) ? "empty" : logData.eventType,
+                    Message = string.IsNullOrWhiteSpace(logData.message) ? "empty" : logData.message,
+                    Details = string.IsNullOrWhiteSpace(logData.details) ? "empty" : logData.details,
+                    ErrorCode = string.IsNullOrWhiteSpace(logData.errorCode) ? "empty" : logData.errorCode
                 };
                 _context.Logs.Add(log);
 
@@ -64,11 +59,13 @@ namespace MS_Back_Logs.Controllers
                     ServiceName = "LogsController",
                     LogLevel = "Error",
                     EventType = "LogPost",
-                    Message = "Swever error",
+                    Message = "Server error",
                     Details = ex.InnerException.Message,
-                    ErrorCode = "400"
+                    ErrorCode = "500"
                 };
+                Console.WriteLine("LOG ERROR" + ex.InnerException.Message);
                 _context.Logs.Add(logModel);
+                await _context.SaveChangesAsync();
                 return BadRequest("Server error");
             }
         }

@@ -1,7 +1,7 @@
 ﻿namespace MS_Back_Logs
 {
     [Serializable]
-    public class LogModel
+    public class LogModelDto
     {
         public int userId { get; set; }
         public DateTime dateTime { get; set; }
