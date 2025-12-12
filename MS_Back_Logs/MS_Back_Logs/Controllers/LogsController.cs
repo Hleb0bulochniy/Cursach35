@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MS_Back_Logs.Data;
 using MS_Back_Logs.Models;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace MS_Back_Logs.Controllers
@@ -25,9 +26,10 @@ namespace MS_Back_Logs.Controllers
         [HttpPost("Log")]
         public async Task<IActionResult> LogPost([FromBody] string kafkaMessage)
         {
+            Console.WriteLine(kafkaMessage);
             try
             {
-                var logData = JsonSerializer.Deserialize<LogModelDto>(kafkaMessage);
+                var logData = JsonSerializer.Deserialize<LogModel>(kafkaMessage);
 
                 if (logData == null)
                 {
@@ -36,14 +38,14 @@ namespace MS_Back_Logs.Controllers
 
                 Log log = new Log
                 {
-                    UserId = logData.userId,
-                    DateTime = logData.dateTime,
-                    ServiceName = string.IsNullOrWhiteSpace(logData.serviceName) ? "empty" : logData.serviceName,
-                    LogLevel = string.IsNullOrWhiteSpace(logData.logLevel) ? "empty" : logData.logLevel,
-                    EventType = string.IsNullOrWhiteSpace(logData.eventType) ? "empty" : logData.eventType,
-                    Message = string.IsNullOrWhiteSpace(logData.message) ? "empty" : logData.message,
-                    Details = string.IsNullOrWhiteSpace(logData.details) ? "empty" : logData.details,
-                    ErrorCode = string.IsNullOrWhiteSpace(logData.errorCode) ? "empty" : logData.errorCode
+                    UserId = logData.UserId,
+                    DateTime = logData.DateTime,
+                    ServiceName = string.IsNullOrWhiteSpace(logData.ServiceName) ? "empty" : logData.ServiceName,
+                    LogLevel = string.IsNullOrWhiteSpace(logData.LogLevel) ? "empty" : logData.LogLevel,
+                    EventType = string.IsNullOrWhiteSpace(logData.EventType) ? "empty" : logData.EventType,
+                    Message = string.IsNullOrWhiteSpace(logData.Message) ? "empty" : logData.Message,
+                    Details = string.IsNullOrWhiteSpace(logData.Details) ? "empty" : logData.Details,
+                    ErrorCode = string.IsNullOrWhiteSpace(logData.ErrorCode) ? "empty" : logData.ErrorCode
                 };
                 _context.Logs.Add(log);
 
@@ -52,6 +54,8 @@ namespace MS_Back_Logs.Controllers
             }
             catch (Exception ex)
             {
+                var details = ex.InnerException?.Message ?? ex.Message;
+
                 Log logModel = new Log
                 {
                     UserId = -1,
@@ -60,10 +64,10 @@ namespace MS_Back_Logs.Controllers
                     LogLevel = "Error",
                     EventType = "LogPost",
                     Message = "Server error",
-                    Details = ex.InnerException.Message,
+                    Details = details,
                     ErrorCode = "500"
                 };
-                Console.WriteLine("LOG ERROR" + ex.InnerException.Message);
+                Console.WriteLine("LOG ERROR" + details);
                 _context.Logs.Add(logModel);
                 await _context.SaveChangesAsync();
                 return BadRequest("Server error");

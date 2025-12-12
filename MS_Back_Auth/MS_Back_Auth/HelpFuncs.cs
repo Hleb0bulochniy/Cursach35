@@ -32,24 +32,24 @@ namespace MS_Back_Auth
             return jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
         }
 
-        public async Task<(bool Success, int ErrorCode, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModelDTO logModel)
+        public async Task<(bool Success, int ErrorCode, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
         {
             string? userId = GetUserIdFromToken(request);
             //var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
-                logModel.logLevel = "Error";
-                logModel.message = "Token has no NameIdentifier claim";
-                logModel.errorCode = "401";
+                logModel.LogLevel = "Error";
+                logModel.Message = "Token has no NameIdentifier claim";
+                logModel.ErrorCode = "401";
                 await LogEventAsync(logModel);
                 return (false, 401, - 1);
             }
 
             if (!int.TryParse(userId, out int parsedUserId))
             {
-                logModel.logLevel = "Error";
-                logModel.message = "User ID conversion in int failed";
-                logModel.errorCode = "400";
+                logModel.LogLevel = "Error";
+                logModel.Message = "User ID conversion in int failed";
+                logModel.ErrorCode = "400";
                 await LogEventAsync(logModel);
                 return (false, 400, - 1);
             }
@@ -57,35 +57,35 @@ namespace MS_Back_Auth
             return (true, 200, parsedUserId);
         }
 
-        public async Task LogEventAsync(LogModelDTO logModel)
+        public async Task LogEventAsync(LogModel logModel)
         {
             var message = JsonSerializer.Serialize(logModel);
             await _producerService.ProduceAsync("LogUpdates", message);
         }
 
-        public LogModelDTO LogModelCreate(string eventType, string message)
+        public LogModel LogModelCreate(string eventType, string message)
         {
-            return new LogModelDTO
+            return new LogModel
             {
-                userId = -1,
-                dateTime = DateTime.UtcNow,
-                serviceName = "AuthController",
-                logLevel = "Info",
-                eventType = eventType,
-                message = message,
-                details = "",
-                errorCode = "200"
+                UserId = -1,
+                DateTime = DateTime.UtcNow,
+                ServiceName = "AuthController",
+                LogLevel = "Info",
+                EventType = eventType,
+                Message = message,
+                Details = "",
+                ErrorCode = "200"
             };
         }
 
 
 
-        public async Task<LogModelDTO> LogModelChangeForServerError(LogModelDTO logModel, Exception ex)
+        public async Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex)
         {
-            logModel.logLevel = "Error";
-            logModel.message = "Server error";
-            logModel.details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
-            logModel.errorCode = "500";
+            logModel.LogLevel = "Error";
+            logModel.Message = "Server error";
+            logModel.Details = $"Error: {ex.Message} ||||| Inner error: {ex.InnerException}";
+            logModel.ErrorCode = "500";
             await LogEventAsync(logModel);
             return logModel;
         }

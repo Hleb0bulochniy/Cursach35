@@ -67,16 +67,16 @@ namespace MS_Back_Auth.Controllers
         [HttpPost("UserRegistration")]
         public async Task<IActionResult> UserRegistrationPost([FromBody] RegistrationDTO registrationClass)
         {
-            LogModelDTO logModel = _helpfuncs.LogModelCreate("UserRegistrationPost", "Registration successful");
+            LogModel logModel = _helpfuncs.LogModelCreate("UserRegistrationPost", "Registration successful");
             try
             {
                 if (registrationClass == null)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Received data is null";
-                    logModel.errorCode = "400";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "Received data is null";
+                    logModel.ErrorCode = "400";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
+                    return BadRequest(logModel.Message);
                 }
                 if (registrationClass.password1 == registrationClass.password2)
                 {
@@ -103,34 +103,34 @@ namespace MS_Back_Auth.Controllers
                         };
                         await _context.Users.AddAsync(user);
                         await _context.SaveChangesAsync();
-                        logModel.userId = user.Id;
+                        logModel.UserId = user.Id;
                         await _helpfuncs.LogEventAsync(logModel);
-                        return Ok(logModel.message);
+                        return Ok(logModel.Message);
                     }
                     else
                     {
-                        logModel.logLevel = "Error";
-                        logModel.message = "The user already exists";
-                        logModel.details = $"userName: {registrationClass.userName}, EMail: {registrationClass.email}";
-                        logModel.errorCode = "400";
+                        logModel.LogLevel = "Error";
+                        logModel.Message = "The user already exists";
+                        logModel.Details = $"userName: {registrationClass.userName}, EMail: {registrationClass.email}";
+                        logModel.ErrorCode = "400";
                         await _helpfuncs.LogEventAsync(logModel);
-                        return BadRequest(logModel.message);
+                        return BadRequest(logModel.Message);
                     }
                 }
                 else
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Passwords don't match";
-                    logModel.details = $"userName: {registrationClass.userName}, EMail: {registrationClass.email}";
-                    logModel.errorCode = "400";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "Passwords don't match";
+                    logModel.Details = $"userName: {registrationClass.userName}, EMail: {registrationClass.email}";
+                    logModel.ErrorCode = "400";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
+                    return BadRequest(logModel.Message);
                 }
             }
             catch (Exception ex)
             {
-                LogModelDTO updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
-                return StatusCode(500, updatedLogModel.message);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
+                return StatusCode(500, updatedLogModel.Message);
             }
         }
 
@@ -145,36 +145,36 @@ namespace MS_Back_Auth.Controllers
         [HttpPost("UserLogin")]
         public async Task<IActionResult> UserLoginPost([FromBody] LoginDTO model)
         {
-            LogModelDTO logModel = _helpfuncs.LogModelCreate("UserLoginPost", "Login successful");
+            LogModel logModel = _helpfuncs.LogModelCreate("UserLoginPost", "Login successful");
             try
             {
                 if (model == null)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Received data is null";
-                    logModel.errorCode = "400";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "Received data is null";
+                    logModel.ErrorCode = "400";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
+                    return BadRequest(logModel.Message);
                 }
                 User? dbuser = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.userName);
-                logModel.userId = dbuser == null? -1 : dbuser.Id;
+                logModel.UserId = dbuser == null? -1 : dbuser.Id;
                 if (dbuser == null)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "There is no user with this login";
-                    logModel.errorCode = "401";
-                    logModel.details = $"User: {model.userName}";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "There is no user with this login";
+                    logModel.ErrorCode = "401";
+                    logModel.Details = $"User: {model.userName}";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
+                    return Unauthorized(logModel.Message);
                 }
                 bool arePasswordsTheSame = Cryptography.Verify(model.password, dbuser.Password);
                 if (!arePasswordsTheSame)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The password doesn't match";
-                    logModel.errorCode = "401";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "The password doesn't match";
+                    logModel.ErrorCode = "401";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
+                    return Unauthorized(logModel.Message);
                 }
 
                 TokenResponceDTO response = _helpfuncs.CreateJWT(dbuser.Username, dbuser.Id.ToString(), dbuser.PlayerId == null ? "-1" : dbuser.PlayerId.ToString(), dbuser.CreatorId == null ? "-1" : dbuser.CreatorId.ToString());
@@ -184,8 +184,8 @@ namespace MS_Back_Auth.Controllers
             }
             catch (Exception ex)
             {
-                LogModelDTO updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
-                return StatusCode(500, updatedLogModel.message);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
+                return StatusCode(500, updatedLogModel.Message);
             }
         }
 
@@ -202,24 +202,24 @@ namespace MS_Back_Auth.Controllers
         [HttpGet("RefreshToken")]
         public async Task<IActionResult> RefreshTokenGet()
         {
-            LogModelDTO logModel = _helpfuncs.LogModelCreate("RefreshTokenGet", "Reftesh token gotten");
+            LogModel logModel = _helpfuncs.LogModelCreate("RefreshTokenGet", "Reftesh token gotten");
             try
             {
                 var (success, errorCode, parsedUserId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success)
                 {
-                    if (errorCode == 401) return Unauthorized(logModel.message);
-                    else if (errorCode == 400) return BadRequest(logModel.message);
+                    if (errorCode == 401) return Unauthorized(logModel.Message);
+                    else if (errorCode == 400) return BadRequest(logModel.Message);
                 }
-                logModel.userId = parsedUserId;
+                logModel.UserId = parsedUserId;
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == parsedUserId);
                 if (user == null)
                 {
-                    logModel.errorCode = "404";
-                    logModel.logLevel = "Error";
-                    logModel.message = "The user wasn't found";
+                    logModel.ErrorCode = "404";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "The user wasn't found";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return NotFound(logModel.message);
+                    return NotFound(logModel.Message);
                 }
 
                 TokenResponceDTO response = _helpfuncs.CreateJWT(
@@ -234,8 +234,8 @@ namespace MS_Back_Auth.Controllers
             }
             catch (Exception ex)
             {
-                LogModelDTO updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
-                return StatusCode(500, updatedLogModel.message);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
+                return StatusCode(500, updatedLogModel.Message);
             }
         }
 
@@ -252,51 +252,51 @@ namespace MS_Back_Auth.Controllers
         [HttpPost("PasswordCheck")]
         public async Task<IActionResult> PasswordCheck([FromBody] PasswordDTO? password)
         {
-            LogModelDTO logModel = _helpfuncs.LogModelCreate("PasswordCheck", "The password is correct");
+            LogModel logModel = _helpfuncs.LogModelCreate("PasswordCheck", "The password is correct");
             try
             {
                 if (password == null)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Received data is null";
-                    logModel.errorCode = "400";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "Received data is null";
+                    logModel.ErrorCode = "400";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return BadRequest(logModel.message);
+                    return BadRequest(logModel.Message);
                 }
                 var (success, errorCode, parsedUserId) = await _helpfuncs.ValidateAndParseUserIdAsync(Request, logModel);
                 if (!success)
                 {
-                    if(errorCode == 401) return Unauthorized(logModel.message);
-                    else if(errorCode == 400) return BadRequest(logModel.message);
+                    if(errorCode == 401) return Unauthorized(logModel.Message);
+                    else if(errorCode == 400) return BadRequest(logModel.Message);
                 }
-                logModel.userId = parsedUserId;
+                logModel.UserId = parsedUserId;
                 User? user = await _context.Users.FirstOrDefaultAsync(u => u.Id == parsedUserId);
 
                 if (user == null)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "There is no such user";
-                    logModel.errorCode = "404";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "There is no such user";
+                    logModel.ErrorCode = "404";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return NotFound(logModel.message);
+                    return NotFound(logModel.Message);
                 }
 
                 bool ok = Cryptography.Verify(password.password, user.Password);
                 if (!ok)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "The password doesn't match";
-                    logModel.errorCode = "401";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "The password doesn't match";
+                    logModel.ErrorCode = "401";
                     await _helpfuncs.LogEventAsync(logModel);
-                    return Unauthorized(logModel.message);
+                    return Unauthorized(logModel.Message);
                 }
                 await _helpfuncs.LogEventAsync(logModel);
-                return Ok(logModel.message);
+                return Ok(logModel.Message);
             }
             catch (Exception ex)
             {
-                LogModelDTO updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
-                return StatusCode(500, updatedLogModel.message);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
+                return StatusCode(500, updatedLogModel.Message);
             }
         }
 
@@ -305,18 +305,17 @@ namespace MS_Back_Auth.Controllers
         /// Check if user exists.
         /// </summary>
         /// <remarks>If user exists, it sends confirmation and his username. If user doesn't exists or recieved data is wrong, it sends denial</remarks>
-        //[Route("UserIdCheck/{idModel:int}")]
-        //[HttpGet]
+        [NonAction]
         public async Task<UserIdCheckDTO> UserIdCheck(UserIdCheckDTO userIdCheckModel)
         {
-            LogModelDTO logModel = _helpfuncs.LogModelCreate("UserIdCheck", "Check successful");
+            LogModel logModel = _helpfuncs.LogModelCreate("UserIdCheck", "Check successful");
             try
             {
                 if (userIdCheckModel == null || userIdCheckModel.userId < 0)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "Received data is wrong";
-                    logModel.errorCode = "400";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "Received data is wrong";
+                    logModel.ErrorCode = "400";
                     userIdCheckModel.isValid = false;
                     userIdCheckModel.userName = "";
 
@@ -338,9 +337,9 @@ namespace MS_Back_Auth.Controllers
 
                 if (user == null)
                 {
-                    logModel.logLevel = "Error";
-                    logModel.message = "There is no such user";
-                    logModel.errorCode = "404";
+                    logModel.LogLevel = "Error";
+                    logModel.Message = "There is no such user";
+                    logModel.ErrorCode = "404";
                     userIdCheckModel.isValid = false;
                     userIdCheckModel.userName = "";
 
@@ -385,7 +384,7 @@ namespace MS_Back_Auth.Controllers
             }
             catch (Exception ex)
             {
-                LogModelDTO updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
+                LogModel updatedLogModel = await _helpfuncs.LogModelChangeForServerError(logModel, ex);
                 return userIdCheckModel;
             }
         }
