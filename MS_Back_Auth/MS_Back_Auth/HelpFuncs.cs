@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace MS_Back_Auth
 {
-    public class HelpFuncs
+    public class HelpFuncs : IHelpFuncs
     {
         private readonly ProducerService _producerService;
         private readonly AuthContext _context;
@@ -32,7 +32,7 @@ namespace MS_Back_Auth
             return jwtToken.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
         }
 
-        public async Task<(bool Success, int ErrorCode, int UserId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
+        public async Task<(bool success, int errorCode, int userId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel)
         {
             string? userId = GetUserIdFromToken(request);
             //var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -176,5 +176,18 @@ namespace MS_Back_Auth
             };
             return response;
         }
+    }
+
+    public interface IHelpFuncs
+    {
+        string GetUserIdFromToken(HttpRequest request);
+        Task<(bool success, int errorCode, int userId)> ValidateAndParseUserIdAsync(HttpRequest request, LogModel logModel);
+        Task LogEventAsync(LogModel logModel);
+        LogModel LogModelCreate(string eventType, string message);
+        Task<LogModel> LogModelChangeForServerError(LogModel logModel, Exception ex);
+        bool IsPasswordValid(string password);
+        bool IsEmailValid(string email);
+        bool IsUsernameValid(string username);
+        TokenResponceDTO CreateJWT(string username, string userId, string playerId, string creatorId);
     }
 }

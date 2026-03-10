@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace MS_Back_Auth.Controllers
 {
@@ -49,9 +50,9 @@ namespace MS_Back_Auth.Controllers
     [Route("api/v1/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly HelpFuncs _helpfuncs;
+        private readonly IHelpFuncs _helpfuncs;
         private readonly AuthContext _context;
-        public AuthController(AuthContext authContext, HelpFuncs helpfuncs)
+        public AuthController(AuthContext authContext, IHelpFuncs helpfuncs)
         {
             _helpfuncs = helpfuncs;
             _context = authContext;

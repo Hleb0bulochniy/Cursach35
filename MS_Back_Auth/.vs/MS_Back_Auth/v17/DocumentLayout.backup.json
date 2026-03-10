@@ -1,0 +1,240 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\ms_back_auth.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\ms_back_auth.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\tests\\authcontrollertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\tests\\authcontrollertests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\helpfuncs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\helpfuncs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\classes.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\classes.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\consumerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\consumerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\producerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\producerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\sacho\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\Cursach35\\MS_Back_Auth\\MS_Back_Auth\\Migrations\\20241215125223_Second_Migration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\sacho\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\Cursach35\\MS_Back_Auth\\MS_Back_Auth\\Migrations\\20241210122456_First_migration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|d:\\university\\cursachrefactoring\\ms_back_auth\\ms_back_auth\\migrations\\20241215131747_second_migration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8B457B08-8524-4B26-9DCC-AACF91FB311B}|MS_Back_Auth\\MS_Back_Auth.csproj|solutionrelative:ms_back_auth\\migrations\\20241215131747_second_migration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 9,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AuthControllerTests.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Tests\\AuthControllerTests.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\Tests\\AuthControllerTests.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Tests\\AuthControllerTests.cs",
+              "RelativeToolTip": "MS_Back_Auth\\Tests\\AuthControllerTests.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAAwwCsAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:54:16.819Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\Controllers\\AuthController.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "MS_Back_Auth\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAGkAAAAAAAAAAAAAAKAAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:30:46.192Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Classes.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Classes.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\Classes.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Classes.cs",
+              "RelativeToolTip": "MS_Back_Auth\\Classes.cs",
+              "ViewState": "AgIAAC0AAAAAAAAAAAAtwD0AAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:30:46.209Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "HelpFuncs.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\HelpFuncs.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\HelpFuncs.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\HelpFuncs.cs",
+              "RelativeToolTip": "MS_Back_Auth\\HelpFuncs.cs",
+              "ViewState": "AgIAAJAAAAAAAAAAAAAAwLQAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:30:46.211Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "User.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Models\\User.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\Models\\User.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Models\\User.cs",
+              "RelativeToolTip": "MS_Back_Auth\\Models\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:30:46.212Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Program.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\Program.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Program.cs",
+              "RelativeToolTip": "MS_Back_Auth\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACIAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:30:46.213Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ConsumerService.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\ConsumerService.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\ConsumerService.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\ConsumerService.cs",
+              "RelativeToolTip": "MS_Back_Auth\\ConsumerService.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAQwEUAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:30:46.215Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MS_Back_Auth.csproj",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\MS_Back_Auth.csproj",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\MS_Back_Auth.csproj",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\MS_Back_Auth.csproj",
+              "RelativeToolTip": "MS_Back_Auth\\MS_Back_Auth.csproj",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAABwAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-03-10T10:30:46.217Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "20241215125223_Second_Migration.cs",
+              "DocumentMoniker": "C:\\Users\\sacho\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\Cursach35\\MS_Back_Auth\\MS_Back_Auth\\Migrations\\20241215125223_Second_Migration.cs",
+              "ToolTip": "C:\\Users\\sacho\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\Cursach35\\MS_Back_Auth\\MS_Back_Auth\\Migrations\\20241215125223_Second_Migration.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-15T12:52:24.078Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ProducerService.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\ProducerService.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\ProducerService.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\ProducerService.cs",
+              "RelativeToolTip": "MS_Back_Auth\\ProducerService.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAgwC8AAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:30:46.248Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "20241215131747_Second_Migration.cs",
+              "DocumentMoniker": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Migrations\\20241215131747_Second_Migration.cs",
+              "RelativeDocumentMoniker": "MS_Back_Auth\\Migrations\\20241215131747_Second_Migration.cs",
+              "ToolTip": "D:\\University\\CursachRefactoring\\MS_Back_Auth\\MS_Back_Auth\\Migrations\\20241215131747_Second_Migration.cs",
+              "RelativeToolTip": "MS_Back_Auth\\Migrations\\20241215131747_Second_Migration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T10:30:46.249Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "20241210122456_First_migration.cs",
+              "DocumentMoniker": "C:\\Users\\sacho\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\Cursach35\\MS_Back_Auth\\MS_Back_Auth\\Migrations\\20241210122456_First_migration.cs",
+              "ToolTip": "C:\\Users\\sacho\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\Cursach35\\MS_Back_Auth\\MS_Back_Auth\\Migrations\\20241210122456_First_migration.cs",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-10T12:24:56.398Z"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{68487888-204a-11d3-87eb-00c04f7971a5}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
